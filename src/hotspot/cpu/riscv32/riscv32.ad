@@ -1227,13 +1227,15 @@ uint MachSpillCopyNode::implementation(CodeBuffer *cbuf, PhaseRegAlloc *ra_, boo
         if (!is64 && this->ideal_reg() != Op_RegI) // zero extended for narrow oop or klass
           __ clear_upper_bits(as_Register(Matcher::_regEncode[dst_lo]), 32);
       } else if (dst_lo_rc == rc_float) { // gpr --> fpr copy
-        if (is64) {
-            __ fmv_d_x(as_FloatRegister(Matcher::_regEncode[dst_lo]),
-                     as_Register(Matcher::_regEncode[src_lo]));
-        } else {
-            __ fmv_w_x(as_FloatRegister(Matcher::_regEncode[dst_lo]),
-                     as_Register(Matcher::_regEncode[src_lo]));
-        }
+        // if (is64) {
+        //     __ fmv_d_x(as_FloatRegister(Matcher::_regEncode[dst_lo]),
+        //              as_Register(Matcher::_regEncode[src_lo]));
+        // } else {
+        //     __ fmv_w_x(as_FloatRegister(Matcher::_regEncode[dst_lo]),
+        //             as_Register(Matcher::_regEncode[src_lo]));
+        // }
+        __ fmv_w_x(as_FloatRegister(Matcher::_regEncode[dst_lo]),
+                    as_Register(Matcher::_regEncode[src_lo])); 
       } else {                    // gpr --> stack spill
         assert(dst_lo_rc == rc_stack, "spill to bad register class");
         __ spill(as_Register(Matcher::_regEncode[src_lo]), is64, dst_offset);
@@ -1242,7 +1244,7 @@ uint MachSpillCopyNode::implementation(CodeBuffer *cbuf, PhaseRegAlloc *ra_, boo
     case rc_float:
       if (dst_lo_rc == rc_int) {  // fpr --> gpr copy
         if (is64) {
-            __ fmv_x_d(as_Register(Matcher::_regEncode[dst_lo]),
+            __ fmv_x_w(as_Register(Matcher::_regEncode[dst_lo]),
                      as_FloatRegister(Matcher::_regEncode[src_lo]));
         } else {
             __ fmv_x_w(as_Register(Matcher::_regEncode[dst_lo]),
@@ -2070,8 +2072,8 @@ encode %{
       __ la(t0, RuntimeAddress(entry));
       // Leave a breadcrumb for JavaFrameAnchor::capture_last_Java_pc()
       __ addi(sp, sp, -2 * wordSize);
-      __ sd(zr, Address(sp));
-      __ sd(t1, Address(sp, wordSize));
+      __ sw(zr, Address(sp));
+      __ sw(t1, Address(sp, wordSize));
       __ jalr(t0);
       __ bind(retaddr);
       __ addi(sp, sp, 2 * wordSize);
@@ -2092,7 +2094,7 @@ encode %{
     assert_different_registers(oop, box, tmp, disp_hdr, t0);
 
     // Load markOop from object into displaced_header.
-    __ ld(disp_hdr, Address(oop, oopDesc::mark_offset_in_bytes()));
+    __ lw(disp_hdr, Address(oop, oopDesc::mark_offset_in_bytes()));
 
     // Always do locking in runtime.
     if (EmitSync & 0x01) {
@@ -2115,7 +2117,7 @@ encode %{
     __ ori(tmp, disp_hdr, markOopDesc::unlocked_value);
 
     // Initialize the box. (Must happen before we update the object mark!)
-    __ sd(tmp, Address(box, BasicLock::displaced_header_offset_in_bytes()));
+    __ sw(tmp, Address(box, BasicLock::displaced_header_offset_in_bytes()));
 
     // Compare object markOop with an unlocked value (tmp) and if
     // equal exchange the stack address of our box with object markOop.
@@ -2139,7 +2141,7 @@ encode %{
     // hence we can store 0 as the displaced header in the box, which indicates that it is a
     // recursive lock.
     __ andr(tmp/*==0?*/, disp_hdr, tmp);
-    __ sd(tmp/*==0, perhaps*/, Address(box, BasicLock::displaced_header_offset_in_bytes()));
+    __ sw(tmp/*==0, perhaps*/, Address(box, BasicLock::displaced_header_offset_in_bytes()));
     __ mv(flag, tmp); // we can use the value of tmp as the result here
 
     if ((EmitSync & 0x02) == 0) {
@@ -2160,7 +2162,7 @@ encode %{
       // markOopDesc::monitor_value so use markOopDesc::unused_mark which has the
       // relevant bit set, and also matches ObjectSynchronizer::slow_enter.
       __ mv(tmp, (address)markOopDesc::unused_mark());
-      __ sd(tmp, Address(box, BasicLock::displaced_header_offset_in_bytes()));
+      __ sw(tmp, Address(box, BasicLock::displaced_header_offset_in_bytes()));
     }
 
     __ bind(cont);
@@ -2190,7 +2192,7 @@ encode %{
     }
 
     // Find the lock address and load the displaced header from the stack.
-    __ ld(disp_hdr, Address(box, BasicLock::displaced_header_offset_in_bytes()));
+    __ lw(disp_hdr, Address(box, BasicLock::displaced_header_offset_in_bytes()));
 
     // If the displaced header is 0, we have a recursive unlock.
     __ mv(flag, disp_hdr);
@@ -2198,7 +2200,7 @@ encode %{
 
     // Handle existing monitor.
     if ((EmitSync & 0x02) == 0) {
-      __ ld(tmp, Address(oop, oopDesc::mark_offset_in_bytes()));
+      __ lw(tmp, Address(oop, oopDesc::mark_offset_in_bytes()));
       __ andi(t0, disp_hdr, markOopDesc::monitor_value);
       __ bnez(t0, object_has_monitor);
     }
@@ -2218,20 +2220,20 @@ encode %{
     if ((EmitSync & 0x02) == 0) {
       __ bind(object_has_monitor);
       __ add(tmp, tmp, -markOopDesc::monitor_value); // monitor
-      __ ld(flag, Address(tmp, ObjectMonitor::owner_offset_in_bytes()));
-      __ ld(disp_hdr, Address(tmp, ObjectMonitor::recursions_offset_in_bytes()));
+      __ lw(flag, Address(tmp, ObjectMonitor::owner_offset_in_bytes()));
+      __ lw(disp_hdr, Address(tmp, ObjectMonitor::recursions_offset_in_bytes()));
       __ xorr(flag, flag, xthread); // Will be 0 if we are the owner.
       __ orr(flag, flag, disp_hdr); // Will be 0 if there are 0 recursions
       __ bnez(flag, cont);
 
-      __ ld(flag, Address(tmp, ObjectMonitor::EntryList_offset_in_bytes()));
-      __ ld(disp_hdr, Address(tmp, ObjectMonitor::cxq_offset_in_bytes()));
+      __ lw(flag, Address(tmp, ObjectMonitor::EntryList_offset_in_bytes()));
+      __ lw(disp_hdr, Address(tmp, ObjectMonitor::cxq_offset_in_bytes()));
       __ orr(flag, flag, disp_hdr); // Will be 0 if both are 0.
       __ bnez(flag, cont);
       // need a release store here
       __ la(tmp, Address(tmp, ObjectMonitor::owner_offset_in_bytes()));
       __ membar(MacroAssembler::LoadStore | MacroAssembler::StoreStore);
-      __ sd(zr, Address(tmp)); // set unowned
+      __ sw(zr, Address(tmp)); // set unowned
     }
 
     __ bind(cont);
@@ -4215,7 +4217,8 @@ instruct loadUI2L(iRegLNoSp dst, memory mem, immL_32bits mask)
   format %{ "lwu  $dst, $mem\t# int, #@loadUI2L" %}
 
   ins_encode %{
-    __ lwu(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    // __ lwu(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    __ lw(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
   %}
 
   ins_pipe(iload_reg_mem);
@@ -4230,7 +4233,8 @@ instruct loadL(iRegLNoSp dst, memory mem)
   format %{ "ld  $dst, $mem\t# int, #@loadL" %}
 
   ins_encode %{
-    __ ld(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    // __ ld(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    __ lw(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
   %}
 
   ins_pipe(iload_reg_mem);
@@ -4245,7 +4249,8 @@ instruct loadRange(iRegINoSp dst, memory mem)
   format %{ "lwu  $dst, $mem\t# range, #@loadRange" %}
 
   ins_encode %{
-    __ lwu(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    // __ lwu(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    __ lw(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
   %}
 
   ins_pipe(iload_reg_mem);
@@ -4260,7 +4265,8 @@ instruct loadP(iRegPNoSp dst, memory mem)
   format %{ "ld  $dst, $mem\t# ptr, #@loadP" %}
 
   ins_encode %{
-    __ ld(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    // __ ld(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    __ lw(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
   %}
 
   ins_pipe(iload_reg_mem);
@@ -4272,10 +4278,11 @@ instruct loadN(iRegNNoSp dst, memory mem)
   match(Set dst (LoadN mem));
 
   ins_cost(LOAD_COST);
-  format %{ "lwu  $dst, $mem\t# loadN, compressed ptr, #@loadN" %}
+  format %{ "lw  $dst, $mem\t# loadN, compressed ptr, #@loadN" %}
 
   ins_encode %{
-    __ lwu(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    // __ lwu(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    __ lw(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
   %}
 
   ins_pipe(iload_reg_mem);
@@ -4287,10 +4294,10 @@ instruct loadKlass(iRegPNoSp dst, memory mem)
   match(Set dst (LoadKlass mem));
 
   ins_cost(LOAD_COST);
-  format %{ "ld  $dst, $mem\t# class, #@loadKlass" %}
+  format %{ "lw  $dst, $mem\t# class, #@loadKlass" %}
 
   ins_encode %{
-    __ ld(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    __ lw(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
   %}
 
   ins_pipe(iload_reg_mem);
@@ -4302,10 +4309,11 @@ instruct loadNKlass(iRegNNoSp dst, memory mem)
   match(Set dst (LoadNKlass mem));
 
   ins_cost(LOAD_COST);
-  format %{ "lwu  $dst, $mem\t# loadNKlass, compressed class ptr, #@loadNKlass" %}
+  format %{ "lw  $dst, $mem\t# loadNKlass, compressed class ptr, #@loadNKlass" %}
 
   ins_encode %{
-    __ lwu(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    // __ lwu(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    __ lw(as_Register($dst$$reg), Address(as_Register($mem$$base), $mem$$disp));
   %}
 
   ins_pipe(iload_reg_mem);
@@ -4521,10 +4529,9 @@ instruct loadConD0(fRegD dst, immD0 con) %{
 
   ins_cost(XFER_COST);
 
-  format %{ "fmv_d_x $dst, zr\t# double, #@loadConD0" %}
-
+  format %{ "fmv_w_x $dst, zr\t# double, #@loadConD0" %}
   ins_encode %{
-    __ fmv_d_x(as_FloatRegister($dst$$reg), zr);
+    __ fmv_w_x(as_FloatRegister($dst$$reg), zr);
   %}
 
   ins_pipe(fp_load_constant_d);
@@ -4659,10 +4666,11 @@ instruct storeL(iRegL src, memory mem)
   match(Set mem (StoreL mem src));
 
   ins_cost(STORE_COST);
-  format %{ "sd  $src, $mem\t# long, #@storeL" %}
+  format %{ "sw  $src, $mem\t# long, #@storeL" %}
 
   ins_encode %{
-    __ sd(as_Register($src$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    //__ sd(as_Register($src$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    __ sw(as_Register($src$$reg), Address(as_Register($mem$$base), $mem$$disp));
   %}
 
   ins_pipe(istore_reg_mem);
@@ -4674,10 +4682,11 @@ instruct storeimmL0(immL0 zero, memory mem)
   match(Set mem (StoreL mem zero));
 
   ins_cost(STORE_COST);
-  format %{ "sd  zr, $mem\t# long, #@storeimmL0" %}
+  format %{ "sw  zr, $mem\t# long, #@storeimmL0" %}
 
   ins_encode %{
-    __ sd(zr, Address(as_Register($mem$$base), $mem$$disp));
+    // __ sd(zr, Address(as_Register($mem$$base), $mem$$disp));
+    __ sw(zr, Address(as_Register($mem$$base), $mem$$disp));
   %}
 
   ins_pipe(istore_mem);
@@ -4689,10 +4698,11 @@ instruct storeP(iRegP src, memory mem)
   match(Set mem (StoreP mem src));
 
   ins_cost(STORE_COST);
-  format %{ "sd  $src, $mem\t# ptr, #@storeP" %}
+  format %{ "sw  $src, $mem\t# ptr, #@storeP" %}
 
   ins_encode %{
-    __ sd(as_Register($src$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    // __ sd(as_Register($src$$reg), Address(as_Register($mem$$base), $mem$$disp));
+    __ sw(as_Register($src$$reg), Address(as_Register($mem$$base), $mem$$disp));
   %}
 
   ins_pipe(istore_reg_mem);
@@ -4704,10 +4714,11 @@ instruct storeimmP0(immP0 zero, memory mem)
   match(Set mem (StoreP mem zero));
 
   ins_cost(STORE_COST);
-  format %{ "sd zr, $mem\t# ptr, #@storeimmP0" %}
+  format %{ "sw zr, $mem\t# ptr, #@storeimmP0" %}
 
   ins_encode %{
-    __ sd(zr, Address(as_Register($mem$$base), $mem$$disp));
+    // __ sd(zr, Address(as_Register($mem$$base), $mem$$disp));
+    __ sw(zr, Address(as_Register($mem$$base), $mem$$disp));
   %}
 
   ins_pipe(istore_mem);
@@ -4822,11 +4833,12 @@ instruct loadPLocked(iRegPNoSp dst, indirect mem)
 
   ins_cost(ALU_COST * 2 + LOAD_COST);
 
-  format %{ "lr_d $dst, $mem\t# ptr load reserved, #@loadPLocked" %}
+  format %{ "lr_w $dst, $mem\t# ptr load reserved, #@loadPLocked" %}
 
   ins_encode %{
     __ la(t0, Address(as_Register($mem$$base), $mem$$disp));
-    __ lr_d($dst$$Register, t0, Assembler::aq);
+    // __ lr_d($dst$$Register, t0, Assembler::aq);
+    __ lr_w($dst$$Register, t0, Assembler::aq);
   %}
 
   ins_pipe(pipe_serial);
@@ -4842,12 +4854,13 @@ instruct storePConditional(memory heap_top_ptr, iRegP oldval, iRegP newval, iReg
   ins_cost(ALU_COST * 2 + STORE_COST);
 
   format %{
-    "sc_d t1, $newval $heap_top_ptr,\t# ptr store conditional, #@storePConditional"
+    "sc_w t1, $newval $heap_top_ptr,\t# ptr store conditional, #@storePConditional"
   %}
 
   ins_encode %{
     __ la(t0, Address(as_Register($heap_top_ptr$$base), $heap_top_ptr$$disp));
-    __ sc_d($cr$$Register, $newval$$Register, t0, Assembler::rl);
+    // __ sc_d($cr$$Register, $newval$$Register, t0, Assembler::rl);
+    __ sc_w($cr$$Register, $newval$$Register, t0, Assembler::rl);
   %}
 
   ins_pipe(pipe_serial);
@@ -6047,7 +6060,8 @@ instruct addI_reg_reg(iRegINoSp dst, iRegIorL2I src1, iRegIorL2I src2) %{
   format %{ "addw  $dst, $src1, $src2\t#@addI_reg_reg" %}
 
   ins_encode %{
-    __ addw(as_Register($dst$$reg),
+    // __ addw(as_Register($dst$$reg),
+    __ add(as_Register($dst$$reg),
             as_Register($src1$$reg),
             as_Register($src2$$reg));
   %}
@@ -6059,11 +6073,12 @@ instruct addI_reg_imm(iRegINoSp dst, iRegIorL2I src1, immIAdd src2) %{
   match(Set dst (AddI src1 src2));
 
   ins_cost(ALU_COST);
-  format %{ "addiw  $dst, $src1, $src2\t#@addI_reg_imm" %}
+  format %{ "addi  $dst, $src1, $src2\t#@addI_reg_imm" %}
 
   ins_encode %{
     int32_t con = (int32_t)$src2$$constant;
-    __ addiw(as_Register($dst$$reg),
+    // __ addiw(as_Register($dst$$reg),
+    __ addi(as_Register($dst$$reg),
              as_Register($src1$$reg),
              $src2$$constant);
   %}
@@ -6075,10 +6090,11 @@ instruct addI_reg_imm_l2i(iRegINoSp dst, iRegL src1, immIAdd src2) %{
   match(Set dst (AddI (ConvL2I src1) src2));
 
   ins_cost(ALU_COST);
-  format %{ "addiw  $dst, $src1, $src2\t#@addI_reg_imm_l2i" %}
+  format %{ "addi  $dst, $src1, $src2\t#@addI_reg_imm_l2i" %}
 
   ins_encode %{
-    __ addiw(as_Register($dst$$reg),
+    // __ addiw(as_Register($dst$$reg),
+    __ addi(as_Register($dst$$reg),
              as_Register($src1$$reg),
              $src2$$constant);
   %}
@@ -6169,10 +6185,11 @@ instruct subI_reg_reg(iRegINoSp dst, iRegIorL2I src1, iRegIorL2I src2) %{
   match(Set dst (SubI src1 src2));
 
   ins_cost(ALU_COST);
-  format %{ "subw  $dst, $src1, $src2\t#@subI_reg_reg" %}
+  format %{ "sub  $dst, $src1, $src2\t#@subI_reg_reg" %}
 
   ins_encode %{
-    __ subw(as_Register($dst$$reg),
+    // __ subw(as_Register($dst$$reg),
+    __ sub(as_Register($dst$$reg),
             as_Register($src1$$reg),
             as_Register($src2$$reg));
   %}
@@ -6185,11 +6202,11 @@ instruct subI_reg_imm(iRegINoSp dst, iRegIorL2I src1, immISub src2) %{
   match(Set dst (SubI src1 src2));
 
   ins_cost(ALU_COST);
-  format %{ "addiw  $dst, $src1, -$src2\t#@subI_reg_imm" %}
+  format %{ "addi  $dst, $src1, -$src2\t#@subI_reg_imm" %}
 
   ins_encode %{
     // src2 is imm, so actually call the addiw
-    __ subw(as_Register($dst$$reg),
+    __ sub(as_Register($dst$$reg),
             as_Register($src1$$reg),
             $src2$$constant);
   %}
@@ -6265,12 +6282,13 @@ instruct negL_reg(iRegLNoSp dst, iRegL src, immL0 zero) %{
 instruct mulI(iRegINoSp dst, iRegIorL2I src1, iRegIorL2I src2) %{
   match(Set dst (MulI src1 src2));
   ins_cost(IMUL_COST);
-  format %{ "mulw  $dst, $src1, $src2\t#@mulI" %}
+  format %{ "mul  $dst, $src1, $src2\t#@mulI" %}
 
   //this means 2 word multi, and no sign extend to 64 bits
   ins_encode %{
     // riscv32 mulw will sign-extension to high 32 bits in dst reg
-    __ mulw(as_Register($dst$$reg),
+    // __ mulw(as_Register($dst$$reg),
+    __ mul(as_Register($dst$$reg),
             as_Register($src1$$reg),
             as_Register($src2$$reg));
   %}
@@ -6338,10 +6356,11 @@ instruct divI(iRegINoSp dst, iRegIorL2I src1, iRegIorL2I src2) %{
 instruct signExtract(iRegINoSp dst, iRegIorL2I src1, immI_31 div1, immI_31 div2) %{
   match(Set dst (URShiftI (RShiftI src1 div1) div2));
   ins_cost(ALU_COST);
-  format %{ "srliw $dst, $src1, $div1\t# int signExtract, #@signExtract" %}
+  format %{ "srli $dst, $src1, $div1\t# int signExtract, #@signExtract" %}
 
   ins_encode %{
-    __ srliw(as_Register($dst$$reg), as_Register($src1$$reg), 31);
+    // __ srliw(as_Register($dst$$reg), as_Register($src1$$reg), 31);
+     __ srli(as_Register($dst$$reg), as_Register($src1$$reg), 31);
   %}
   ins_pipe(ialu_reg_shift);
 %}
@@ -6396,10 +6415,11 @@ instruct modL(iRegLNoSp dst, iRegL src1, iRegL src2) %{
 instruct lShiftI_reg_reg(iRegINoSp dst, iRegIorL2I src1, iRegIorL2I src2) %{
   match(Set dst (LShiftI src1 src2));
   ins_cost(ALU_COST);
-  format %{ "sllw  $dst, $src1, $src2\t#@lShiftI_reg_reg" %}
+  format %{ "sll  $dst, $src1, $src2\t#@lShiftI_reg_reg" %}
 
   ins_encode %{
-    __ sllw(as_Register($dst$$reg),
+    // __ sllw(as_Register($dst$$reg),
+    __ sll(as_Register($dst$$reg),
             as_Register($src1$$reg),
             as_Register($src2$$reg));
   %}
@@ -6411,12 +6431,12 @@ instruct lShiftI_reg_reg(iRegINoSp dst, iRegIorL2I src1, iRegIorL2I src2) %{
 instruct lShiftI_reg_imm(iRegINoSp dst, iRegIorL2I src1, immI src2) %{
   match(Set dst (LShiftI src1 src2));
   ins_cost(ALU_COST);
-  format %{ "slliw  $dst, $src1, ($src2 & 0x1f)\t#@lShiftI_reg_imm" %}
+  format %{ "slli  $dst, $src1, ($src2 & 0x1f)\t#@lShiftI_reg_imm" %}
 
   ins_encode %{
     // the shift amount is encoded in the lower
     // 5 bits of the I-immediate field for RV32I
-    __ slliw(as_Register($dst$$reg),
+    __ slli(as_Register($dst$$reg),
              as_Register($src1$$reg),
              (unsigned) $src2$$constant & 0x1f);
   %}
@@ -6428,10 +6448,11 @@ instruct lShiftI_reg_imm(iRegINoSp dst, iRegIorL2I src1, immI src2) %{
 instruct urShiftI_reg_reg(iRegINoSp dst, iRegIorL2I src1, iRegIorL2I src2) %{
   match(Set dst (URShiftI src1 src2));
   ins_cost(ALU_COST);
-  format %{ "srlw  $dst, $src1, $src2\t#@urShiftI_reg_reg" %}
+  format %{ "srl  $dst, $src1, $src2\t#@urShiftI_reg_reg" %}
 
   ins_encode %{
-    __ srlw(as_Register($dst$$reg),
+    // __ srlw(as_Register($dst$$reg),
+     __ srl(as_Register($dst$$reg),
             as_Register($src1$$reg),
             as_Register($src2$$reg));
   %}
@@ -6443,12 +6464,12 @@ instruct urShiftI_reg_reg(iRegINoSp dst, iRegIorL2I src1, iRegIorL2I src2) %{
 instruct urShiftI_reg_imm(iRegINoSp dst, iRegIorL2I src1, immI src2) %{
   match(Set dst (URShiftI src1 src2));
   ins_cost(ALU_COST);
-  format %{ "srliw  $dst, $src1, ($src2 & 0x1f)\t#@urShiftI_reg_imm" %}
+  format %{ "srli  $dst, $src1, ($src2 & 0x1f)\t#@urShiftI_reg_imm" %}
 
   ins_encode %{
     // the shift amount is encoded in the lower
     // 6 bits of the I-immediate field for RV64I
-    __ srliw(as_Register($dst$$reg),
+    __ srli(as_Register($dst$$reg),
              as_Register($src1$$reg),
              (unsigned) $src2$$constant & 0x1f);
   %}
@@ -6460,11 +6481,12 @@ instruct urShiftI_reg_imm(iRegINoSp dst, iRegIorL2I src1, immI src2) %{
 instruct rShiftI_reg_reg(iRegINoSp dst, iRegIorL2I src1, iRegIorL2I src2) %{
   match(Set dst (RShiftI src1 src2));
   ins_cost(ALU_COST);
-  format %{ "sraw  $dst, $src1, $src2\t#@rShiftI_reg_reg" %}
+  format %{ "sra  $dst, $src1, $src2\t#@rShiftI_reg_reg" %}
 
   ins_encode %{
     // riscv will sign-ext dst high 32 bits
-    __ sraw(as_Register($dst$$reg),
+    // __ sraw(as_Register($dst$$reg),
+    __ sra(as_Register($dst$$reg),
             as_Register($src1$$reg),
             as_Register($src2$$reg));
   %}
@@ -6476,11 +6498,12 @@ instruct rShiftI_reg_reg(iRegINoSp dst, iRegIorL2I src1, iRegIorL2I src2) %{
 instruct rShiftI_reg_imm(iRegINoSp dst, iRegIorL2I src1, immI src2) %{
   match(Set dst (RShiftI src1 src2));
   ins_cost(ALU_COST);
-  format %{ "sraiw  $dst, $src1, ($src2 & 0x1f)\t#@rShiftI_reg_imm" %}
+  format %{ "srai  $dst, $src1, ($src2 & 0x1f)\t#@rShiftI_reg_imm" %}
 
   ins_encode %{
     // riscv will sign-ext dst high 32 bits
-    __ sraiw(as_Register($dst$$reg),
+    // __ sraiw(as_Register($dst$$reg),
+     __ srai(as_Register($dst$$reg),
              as_Register($src1$$reg),
              (unsigned) $src2$$constant & 0x1f);
   %}
@@ -7459,7 +7482,8 @@ instruct convI2L_reg_reg(iRegLNoSp dst, iRegIorL2I src)
   ins_cost(ALU_COST);
   format %{ "addw  $dst, $src\t#@convI2L_reg_reg" %}
   ins_encode %{
-    __ addw(as_Register($dst$$reg), as_Register($src$$reg), zr);
+    // __ addw(as_Register($dst$$reg), as_Register($src$$reg), zr);
+    __ add(as_Register($dst$$reg), as_Register($src$$reg), zr);
   %}
   ins_pipe(ialu_reg);
 %}
@@ -7468,10 +7492,11 @@ instruct convL2I_reg(iRegINoSp dst, iRegL src) %{
   match(Set dst (ConvL2I src));
 
   ins_cost(ALU_COST);
-  format %{ "addw  $dst, $src, zr\t#@convL2I_reg" %}
+  format %{ "add  $dst, $src, zr\t#@convL2I_reg" %}
 
   ins_encode %{
-    __ addw(as_Register($dst$$reg), as_Register($src$$reg), zr);
+    // __ addw(as_Register($dst$$reg), as_Register($src$$reg), zr);
+    __ add(as_Register($dst$$reg), as_Register($src$$reg), zr);
   %}
 
   ins_pipe(ialu_reg);
@@ -7569,10 +7594,11 @@ instruct convL2F_reg_reg(fRegF dst, iRegL src) %{
   match(Set dst (ConvL2F src));
 
   ins_cost(XFER_COST);
-  format %{ "fcvt.s.l  $dst, $src\t#@convL2F_reg_reg" %}
+  format %{ "fcvt.s.w  $dst, $src\t#@convL2F_reg_reg" %}
 
   ins_encode %{
-    __ fcvt_s_l(as_FloatRegister($dst$$reg), as_Register($src$$reg));
+    // __ fcvt_s_l(as_FloatRegister($dst$$reg), as_Register($src$$reg));
+    __ fcvt_s_w(as_FloatRegister($dst$$reg), as_Register($src$$reg));
   %}
 
   ins_pipe(fp_l2f);
@@ -7625,10 +7651,11 @@ instruct convL2D_reg_reg(fRegD dst, iRegL src) %{
   match(Set dst (ConvL2D src));
 
   ins_cost(XFER_COST);
-  format %{ "fcvt.d.l  $dst, $src\t#@convL2D_reg_reg" %}
+  format %{ "fcvt.d.w  $dst, $src\t#@convL2D_reg_reg" %}
 
   ins_encode %{
-    __ fcvt_d_l(as_FloatRegister($dst$$reg), as_Register($src$$reg));
+    // __ fcvt_d_l(as_FloatRegister($dst$$reg), as_Register($src$$reg));
+    __ fcvt_d_w(as_FloatRegister($dst$$reg), as_Register($src$$reg));
   %}
 
   ins_pipe(fp_l2d);
@@ -7811,10 +7838,10 @@ instruct MoveD2L_stack_reg(iRegLNoSp dst, stackSlotD src) %{
 
   ins_cost(LOAD_COST);
 
-  format %{ "ld  $dst, $src\t#@MoveD2L_stack_reg" %}
+  format %{ "lw  $dst, $src\t#@MoveD2L_stack_reg" %}
 
   ins_encode %{
-    __ ld(as_Register($dst$$reg), Address(sp, $src$$disp));
+    __ lw(as_Register($dst$$reg), Address(sp, $src$$disp));
   %}
 
   ins_pipe(iload_reg_reg);
@@ -7901,10 +7928,10 @@ instruct MoveL2D_reg_stack(stackSlotD dst, iRegL src) %{
 
   ins_cost(STORE_COST);
 
-  format %{ "sd  $src, $dst\t#@MoveL2D_reg_stack" %}
+  format %{ "sw  $src, $dst\t#@MoveL2D_reg_stack" %}
 
   ins_encode %{
-    __ sd(as_Register($src$$reg), Address(sp, $dst$$disp));
+    __ sw(as_Register($src$$reg), Address(sp, $dst$$disp));
   %}
 
   ins_pipe(istore_reg_reg);
@@ -7958,7 +7985,7 @@ instruct MoveD2L_reg_reg(iRegLNoSp dst, fRegD src) %{
   format %{ "fmv.x.d $dst, $src\t#@MoveD2L_reg_reg" %}
 
   ins_encode %{
-    __ fmv_x_d(as_Register($dst$$reg), as_FloatRegister($src$$reg));
+    __ fmv_x_w(as_Register($dst$$reg), as_FloatRegister($src$$reg));
   %}
 
   ins_pipe(fp_d2l);
@@ -7973,10 +8000,10 @@ instruct MoveL2D_reg_reg(fRegD dst, iRegL src) %{
 
   ins_cost(XFER_COST);
 
-  format %{ "fmv.d.x  $dst, $src\t#@MoveD2L_reg_reg" %}
+  format %{ "fmv.w.x  $dst, $src\t#@MoveD2L_reg_reg" %}
 
   ins_encode %{
-    __ fmv_d_x(as_FloatRegister($dst$$reg), as_Register($src$$reg));
+    __ fmv_w_x(as_FloatRegister($dst$$reg), as_Register($src$$reg));
   %}
 
   ins_pipe(fp_l2d);
@@ -8053,7 +8080,7 @@ instruct cmpLTMask_reg_reg(iRegINoSp dst, iRegIorL2I p, iRegIorL2I q)
 
   ins_encode %{
     __ slt(as_Register($dst$$reg), as_Register($p$$reg), as_Register($q$$reg));
-    __ subw(as_Register($dst$$reg), zr, as_Register($dst$$reg));
+    __ sub(as_Register($dst$$reg), zr, as_Register($dst$$reg));
   %}
 
   ins_pipe(ialu_reg_reg);
@@ -8068,7 +8095,7 @@ instruct cmpLTMask_reg_zero(iRegINoSp dst, iRegIorL2I op, immI0 zero)
   format %{ "sraiw $dst, $dst, 31\t#@cmpLTMask_reg_reg" %}
 
   ins_encode %{
-    __ sraiw(as_Register($dst$$reg), as_Register($op$$reg), 31);
+    __ srai(as_Register($dst$$reg), as_Register($op$$reg), 31);
   %}
 
   ins_pipe(ialu_reg_shift);

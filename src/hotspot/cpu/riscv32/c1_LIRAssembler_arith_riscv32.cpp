@@ -75,8 +75,8 @@ void LIR_Assembler::arith_op_single_cpu_right_constant(LIR_Code code, LIR_Opr le
   switch (left->type()) {
     case T_INT:
       switch (code) {
-        case lir_add: __ addw(dreg, lreg, c); break;
-        case lir_sub: __ subw(dreg, lreg, c); break;
+        case lir_add: __ add(dreg, lreg, c); break;
+        case lir_sub: __ sub(dreg, lreg, c); break;
         default:      ShouldNotReachHere();
       }
     break;
@@ -101,9 +101,9 @@ void LIR_Assembler::arith_op_single_cpu(LIR_Code code, LIR_Opr left, LIR_Opr rig
     assert(left->type() == T_INT && right->type() == T_INT && dest->type() == T_INT, "should be");
     Register rreg = right->as_register();
     switch (code) {
-      case lir_add: __ addw(dest->as_register(), lreg, rreg); break;
-      case lir_sub: __ subw(dest->as_register(), lreg, rreg); break;
-      case lir_mul: __ mulw(dest->as_register(), lreg, rreg); break;
+      case lir_add: __ add(dest->as_register(), lreg, rreg); break;
+      case lir_sub: __ sub(dest->as_register(), lreg, rreg); break;
+      case lir_mul: __ mul(dest->as_register(), lreg, rreg); break;
       default:      ShouldNotReachHere();
     }
   } else if (right->is_double_cpu()) {

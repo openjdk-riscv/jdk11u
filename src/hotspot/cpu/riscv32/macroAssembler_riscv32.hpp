@@ -50,15 +50,19 @@ class MacroAssembler: public Assembler {
   // Stack frame creation/removal
   void enter() {
     addi(sp, sp, - 2 * wordSize);
-    sd(lr, Address(sp, wordSize));
-    sd(fp, Address(sp));
+    //sd(lr, Address(sp, wordSize));
+    sw(lr, Address(sp, wordSize));
+    //sd(fp, Address(sp));
+    sw(fp, Address(sp));
     mv(fp, sp);
   }
 
   void leave() {
     mv(sp, fp);
-    ld(fp, Address(sp));
-    ld(lr, Address(sp, wordSize));
+    // ld(fp, Address(sp));
+    lw(fp, Address(sp));
+    // ld(lr, Address(sp, wordSize));
+    lw(lr, Address(sp, wordSize));
     addi(sp, sp, 2 * wordSize);
   }
 
@@ -493,7 +497,7 @@ class MacroAssembler: public Assembler {
   void reinit_heapbase();
 
   // mv
-  void mv(Register Rd, int64_t imm64);
+  // void mv(Register Rd, int64_t imm64);
   void mv(Register Rd, int imm);
   void mvw(Register Rd, int32_t imm32);
   void mv(Register Rd, Address dest);
@@ -611,7 +615,8 @@ class MacroAssembler: public Assembler {
     // stack grows down, caller passes positive offset
     assert(offset > 0, "must bang with negative offset");
     sub(t1, sp, offset);
-    sd(zr, Address(t1));
+    // sd(zr, Address(t1));
+    sw(zr, Address(t1));
   }
 
   void la_patchable(Register reg1, const Address &dest, int32_t &offset);
@@ -623,43 +628,48 @@ class MacroAssembler: public Assembler {
 
 #ifdef COMPILER2
   void spill(Register Rx, bool is64, int offset) {
-    if (is64) {
-      sd(Rx, Address(sp, offset));
-    } else {
-      sw(Rx, Address(sp, offset));
-    }
+    // if (is64) {
+    //   sd(Rx, Address(sp, offset));
+    // } else {
+    //   sw(Rx, Address(sp, offset));
+    // }
+    sw(Rx, Address(sp, offset));
   }
 
   void spill(FloatRegister Rx, bool is64, int offset) {
-    if (is64) {
-      fsd(Rx, Address(sp, offset));
-    } else {
-      fsw(Rx, Address(sp, offset));
-    }
+    // if (is64) {
+    //   fsd(Rx, Address(sp, offset));
+    // } else {
+    //   fsw(Rx, Address(sp, offset));
+    // }
+    fsw(Rx, Address(sp, offset));
   }
 
   void unspill(Register Rx, bool is64, int offset) {
-    if (is64) {
-      ld(Rx, Address(sp, offset));
-    } else {
-      lw(Rx, Address(sp, offset));
-    }
+    // if (is64) {
+    //   ld(Rx, Address(sp, offset));
+    // } else {
+    //   lw(Rx, Address(sp, offset));
+    // }
+    lw(Rx, Address(sp, offset));
   }
 
   void unspillu(Register Rx, bool is64, int offset) {
-    if (is64) {
-      ld(Rx, Address(sp, offset));
-    } else {
-      lwu(Rx, Address(sp, offset));
-    }
+    // if (is64) {
+    //   ld(Rx, Address(sp, offset));
+    // } else {
+    //   lwu(Rx, Address(sp, offset));
+    // }
+    lw(Rx, Address(sp, offset));
   }
 
   void unspill(FloatRegister Rx, bool is64, int offset) {
-    if (is64) {
-      fld(Rx, Address(sp, offset));
-    } else {
-      flw(Rx, Address(sp, offset));
-    }
+    // if (is64) {
+    //   fld(Rx, Address(sp, offset));
+    // } else {
+    //   flw(Rx, Address(sp, offset));
+    // }
+    flw(Rx, Address(sp, offset));
   }
 #endif // COMPILER2
 
@@ -754,7 +764,8 @@ class MacroAssembler: public Assembler {
       sign_ext(Rt, Rt, registerSize - 16);
       break;
     case T_INT    :
-      addw(Rt, Rt, zr);
+      // addw(Rt, Rt, zr);
+      add(Rt, Rt, zr);
       break;
     case T_LONG   : /* nothing to do */        break;
     case T_VOID   : /* nothing to do */        break;
@@ -794,11 +805,13 @@ private:
 
   void ld_constant(Register dest, const Address &const_addr) {
     if (NearCpool) {
-      ld(dest, const_addr);
+      // ld(dest, const_addr);
+      lw(dest, const_addr);
     } else {
       int32_t offset = 0;
       la_patchable(dest, InternalAddress(const_addr.target()), offset);
-      ld(dest, Address(dest, offset));
+      // ld(dest, Address(dest, offset));
+      lw(dest, Address(dest, offset));
     }
   }
   void load_reserved(Register addr, enum operand_size size, Assembler::Aqrl acquire);

@@ -320,7 +320,7 @@ void ArrayCopyStub::emit_code(LIR_Assembler* ce)
     VMReg r_1 = args[j].first();
     if (r_1->is_stack()) {
       int st_off = r_1->reg2stack() * wordSize;
-      __ sd(r[j], Address(sp, st_off));
+      __ sw(r[j], Address(sp, st_off));
     } else {
       assert(r[j] == args[j].first()->as_Register(), "Wrong register for arg ");
     }

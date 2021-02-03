@@ -50,7 +50,7 @@ void MethodHandles::load_klass_from_Class(MacroAssembler* _masm, Register klass_
     verify_klass(_masm, klass_reg, SystemDictionary::WK_KLASS_ENUM_NAME(java_lang_Class),
                  "MH argument is a Class");
   }
-  __ ld(klass_reg, Address(klass_reg, java_lang_Class::klass_offset_in_bytes()));
+  __ lw(klass_reg, Address(klass_reg, java_lang_Class::klass_offset_in_bytes()));
 }
 
 #ifdef ASSERT
@@ -80,7 +80,7 @@ void MethodHandles::verify_klass(MacroAssembler* _masm,
   __ load_klass(temp, obj);
   __ cmpptr(temp, ExternalAddress((address) klass_addr), L_ok);
   intptr_t super_check_offset = klass->super_check_offset();
-  __ ld(temp, Address(temp, super_check_offset));
+  __ lw(temp, Address(temp, super_check_offset));
   __ cmpptr(temp, ExternalAddress((address) klass_addr), L_ok);
   __ pop_reg(RegSet::of(temp, temp2), sp);
   __ bind(L_bad);
@@ -108,16 +108,16 @@ void MethodHandles::jump_from_method_handle(MacroAssembler* _masm, Register meth
     // compiled code in threads for which the event is enabled.  Check here for
     // interp_only_mode if these events CAN be enabled.
 
-    __ lwu(t0, Address(xthread, JavaThread::interp_only_mode_offset()));
+    __ lw(t0, Address(xthread, JavaThread::interp_only_mode_offset()));
     __ beqz(t0, run_compiled_code);
-    __ ld(t0, Address(method, Method::interpreter_entry_offset()));
+    __ lw(t0, Address(method, Method::interpreter_entry_offset()));
     __ jr(t0);
     __ BIND(run_compiled_code);
   }
 
   const ByteSize entry_offset = for_compiler_entry ? Method::from_compiled_offset() :
                                                      Method::from_interpreted_offset();
-  __ ld(t0,Address(method, entry_offset));
+  __ lw(t0,Address(method, entry_offset));
   __ jr(t0);
   __ bind(L_no_such_method);
   __ far_jump(RuntimeAddress(StubRoutines::throw_AbstractMethodError_entry()));
@@ -147,14 +147,14 @@ void MethodHandles::jump_to_lambda_form(MacroAssembler* _masm,
 
   if (VerifyMethodHandles && !for_compiler_entry) {
     // make sure recv is already on stack
-    __ ld(temp2, Address(method_temp, Method::const_offset()));
+    __ lw(temp2, Address(method_temp, Method::const_offset()));
     __ load_sized_value(temp2,
                         Address(temp2, ConstMethod::size_of_parameters_offset()),
                         sizeof(u2), /*is_signed*/ false);
     Label L;
-    __ ld(t0, __ argument_address(temp2, -1));
+    __ lw(t0, __ argument_address(temp2, -1));
     __ oop_equal(recv, t0, L);
-    __ ld(x10, __ argument_address(temp2, -1));
+    __ lw(x10, __ argument_address(temp2, -1));
     __ ebreak();
     __ BIND(L);
   }
@@ -212,7 +212,7 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   int ref_kind = signature_polymorphic_intrinsic_ref_kind(iid);
   assert(ref_kind != 0 || iid == vmIntrinsics::_invokeBasic, "must be _invokeBasic or a linkTo intrinsic");
   if (ref_kind == 0 || MethodHandles::ref_kind_has_receiver(ref_kind)) {
-    __ ld(argp, Address(xmethod, Method::const_offset()));
+    __ lw(argp, Address(xmethod, Method::const_offset()));
     __ load_sized_value(argp,
                         Address(argp, ConstMethod::size_of_parameters_offset()),
                         sizeof(u2), /*is_signed*/ false);
@@ -222,7 +222,7 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   }
 
   if (!is_signature_polymorphic_static(iid)) {
-    __ ld(mh, x13_first_arg_addr);
+    __ lw(mh, x13_first_arg_addr);
     DEBUG_ONLY(argp = noreg);
   }
 
@@ -237,7 +237,7 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
     Register recv = noreg;
     if (MethodHandles::ref_kind_has_receiver(ref_kind)) {
       // Load the receiver (not the MH; the actual MemberName's receiver) up from the interpreter stack.
-      __ ld(recv = x12, x13_first_arg_addr);
+      __ lw(recv = x12, x13_first_arg_addr);
     }
     DEBUG_ONLY(argp = noreg);
     Register xmember = xmethod;  // MemberName ptr; incoming method ptr is dead now

@@ -396,24 +396,24 @@ public:
   INSN(srl,   0b0110011, 0b101, 0b0000000);
   INSN(slt,   0b0110011, 0b010, 0b0000000);
   INSN(sltu,  0b0110011, 0b011, 0b0000000);
-  INSN(addw,  0b0111011, 0b000, 0b0000000);
-  INSN(subw,  0b0111011, 0b000, 0b0100000);
-  INSN(sllw,  0b0111011, 0b001, 0b0000000);
-  INSN(sraw,  0b0111011, 0b101, 0b0100000);
-  INSN(srlw,  0b0111011, 0b101, 0b0000000);
+  // INSN(addw,  0b0111011, 0b000, 0b0000000);
+  // INSN(subw,  0b0111011, 0b000, 0b0100000);
+  // INSN(sllw,  0b0111011, 0b001, 0b0000000);
+  // INSN(sraw,  0b0111011, 0b101, 0b0100000);
+  // INSN(srlw,  0b0111011, 0b101, 0b0000000);
   INSN(mul,   0b0110011, 0b000, 0b0000001);
   INSN(mulh,  0b0110011, 0b001, 0b0000001);
   INSN(mulhsu,0b0110011, 0b010, 0b0000001);
   INSN(mulhu, 0b0110011, 0b011, 0b0000001);
-  INSN(mulw,  0b0111011, 0b000, 0b0000001);
+  // INSN(mulw,  0b0111011, 0b000, 0b0000001);
   INSN(div,   0b0110011, 0b100, 0b0000001);
   INSN(divu,  0b0110011, 0b101, 0b0000001);
-  INSN(divw,  0b0111011, 0b100, 0b0000001);
-  INSN(divuw, 0b0111011, 0b101, 0b0000001);
+  // INSN(divw,  0b0111011, 0b100, 0b0000001);
+  // INSN(divuw, 0b0111011, 0b101, 0b0000001);
   INSN(rem,   0b0110011, 0b110, 0b0000001);
   INSN(remu,  0b0110011, 0b111, 0b0000001);
-  INSN(remw,  0b0111011, 0b110, 0b0000001);
-  INSN(remuw, 0b0111011, 0b111, 0b0000001);
+  // INSN(remw,  0b0111011, 0b110, 0b0000001);
+  // INSN(remuw, 0b0111011, 0b111, 0b0000001);
 
 #undef INSN
 
@@ -484,11 +484,11 @@ public:
 
   INSN(lb,  0b0000011, 0b000);
   INSN(lbu, 0b0000011, 0b100);
-  INSN(ld,  0b0000011, 0b011);
+  // INSN(ld,  0b0000011, 0b011);
   INSN(lh,  0b0000011, 0b001);
   INSN(lhu, 0b0000011, 0b101);
   INSN(lw,  0b0000011, 0b010);
-  INSN(lwu, 0b0000011, 0b110);
+  // INSN(lwu, 0b0000011, 0b110);
 
 #undef INSN
 
@@ -619,7 +619,7 @@ public:
   INSN(sb,  Register,      0b0100011, 0b000);
   INSN(sh,  Register,      0b0100011, 0b001);
   INSN(sw,  Register,      0b0100011, 0b010);
-  INSN(sd,  Register,      0b0100011, 0b011);
+  // INSN(sd,  Register,      0b0100011, 0b011);
   INSN(fsw, FloatRegister, 0b0100111, 0b010);
   INSN(fsd, FloatRegister, 0b0100111, 0b011);
 
@@ -666,7 +666,7 @@ public:
   INSN(sb);
   INSN(sh);
   INSN(sw);
-  INSN(sd);
+  // INSN(sd);
 
 #undef INSN
 
@@ -859,15 +859,15 @@ enum Aqrl {relaxed = 0b00, rl = 0b01, aq = 0b10, aqrl = 0b11};
   INSN(amomax_w,  0b0101111, 0b010, 0b10100);
   INSN(amominu_w, 0b0101111, 0b010, 0b11000);
   INSN(amomaxu_w, 0b0101111, 0b010, 0b11100);
-  INSN(amoswap_d, 0b0101111, 0b011, 0b00001);
-  INSN(amoadd_d,  0b0101111, 0b011, 0b00000);
-  INSN(amoxor_d,  0b0101111, 0b011, 0b00100);
-  INSN(amoand_d,  0b0101111, 0b011, 0b01100);
-  INSN(amoor_d,   0b0101111, 0b011, 0b01000);
-  INSN(amomin_d,  0b0101111, 0b011, 0b10000);
-  INSN(amomax_d , 0b0101111, 0b011, 0b10100);
-  INSN(amominu_d, 0b0101111, 0b011, 0b11000);
-  INSN(amomaxu_d, 0b0101111, 0b011, 0b11100);
+  // INSN(amoswap_d, 0b0101111, 0b011, 0b00001);
+  // INSN(amoadd_d,  0b0101111, 0b011, 0b00000);
+  // INSN(amoxor_d,  0b0101111, 0b011, 0b00100);
+  // INSN(amoand_d,  0b0101111, 0b011, 0b01100);
+  // INSN(amoor_d,   0b0101111, 0b011, 0b01000);
+  // INSN(amomin_d,  0b0101111, 0b011, 0b10000);
+  // INSN(amomax_d , 0b0101111, 0b011, 0b10100);
+  // INSN(amominu_d, 0b0101111, 0b011, 0b11000);
+  // INSN(amomaxu_d, 0b0101111, 0b011, 0b11100);
 #undef INSN
 
 enum operand_size { int8, int16, int32, uint32, int64 };
@@ -887,7 +887,7 @@ enum operand_size { int8, int16, int32, uint32, int64 };
   }
 
   INSN(lr_w, 0b0101111, 0b010, 0b00010);
-  INSN(lr_d, 0b0101111, 0b011, 0b00010);
+  // INSN(lr_d, 0b0101111, 0b011, 0b00010);
 
 #undef INSN
 
@@ -906,7 +906,7 @@ enum operand_size { int8, int16, int32, uint32, int64 };
   }
 
   INSN(sc_w, 0b0101111, 0b010, 0b00011);
-  INSN(sc_d, 0b0101111, 0b011, 0b00011);
+  // INSN(sc_d, 0b0101111, 0b011, 0b00011);
 #undef INSN
 
 #define INSN(NAME, op, funct5, funct7)                                                      \
@@ -942,7 +942,7 @@ enum operand_size { int8, int16, int32, uint32, int64 };
 
   INSN(addi,  0b0010011, 0b000);
   INSN(slti,  0b0010011, 0b010);
-  INSN(addiw, 0b0011011, 0b000);
+  // INSN(addiw, 0b0011011, 0b000);
   INSN(and_imm12,  0b0010011, 0b111);
   INSN(ori,   0b0010011, 0b110);
   INSN(xori,  0b0010011, 0b100);
@@ -999,9 +999,9 @@ enum operand_size { int8, int16, int32, uint32, int64 };
     emit(insn);                                                         \
   }
 
-  INSN(slliw, 0b0011011, 0b001, 0b0000000);
-  INSN(sraiw, 0b0011011, 0b101, 0b0100000);
-  INSN(srliw, 0b0011011, 0b101, 0b0000000);
+  // INSN(slliw, 0b0011011, 0b001, 0b0000000);
+  // INSN(sraiw, 0b0011011, 0b101, 0b0100000);
+  // INSN(srliw, 0b0011011, 0b101, 0b0000000);
 
 #undef INSN
 
@@ -1133,12 +1133,12 @@ enum operand_size { int8, int16, int32, uint32, int64 };
 
   INSN(fcvt_s_w,   0b1010011, 0b00000, 0b1101000);
   INSN(fcvt_s_wu,  0b1010011, 0b00001, 0b1101000);
-  INSN(fcvt_s_l,   0b1010011, 0b00010, 0b1101000);
-  INSN(fcvt_s_lu,  0b1010011, 0b00011, 0b1101000);
+  // INSN(fcvt_s_l,   0b1010011, 0b00010, 0b1101000);
+  // INSN(fcvt_s_lu,  0b1010011, 0b00011, 0b1101000);
   INSN(fcvt_d_w,   0b1010011, 0b00000, 0b1101001);
   INSN(fcvt_d_wu,  0b1010011, 0b00001, 0b1101001);
-  INSN(fcvt_d_l,   0b1010011, 0b00010, 0b1101001);
-  INSN(fcvt_d_lu,  0b1010011, 0b00011, 0b1101001);
+  // INSN(fcvt_d_l,   0b1010011, 0b00010, 0b1101001);
+  // INSN(fcvt_d_lu,  0b1010011, 0b00011, 0b1101001);
 
 #undef INSN
 
@@ -1156,13 +1156,13 @@ enum operand_size { int8, int16, int32, uint32, int64 };
   }
 
   INSN(fcvt_w_s,   0b1010011, 0b00000, 0b1100000);
-  INSN(fcvt_l_s,   0b1010011, 0b00010, 0b1100000);
+  // INSN(fcvt_l_s,   0b1010011, 0b00010, 0b1100000);
   INSN(fcvt_wu_s,  0b1010011, 0b00001, 0b1100000);
-  INSN(fcvt_lu_s,  0b1010011, 0b00011, 0b1100000);
+  // INSN(fcvt_lu_s,  0b1010011, 0b00011, 0b1100000);
   INSN(fcvt_w_d,   0b1010011, 0b00000, 0b1100001);
   INSN(fcvt_wu_d,  0b1010011, 0b00001, 0b1100001);
-  INSN(fcvt_l_d,   0b1010011, 0b00010, 0b1100001);
-  INSN(fcvt_lu_d,  0b1010011, 0b00011, 0b1100001);
+  // INSN(fcvt_l_d,   0b1010011, 0b00010, 0b1100001);
+  // INSN(fcvt_lu_d,  0b1010011, 0b00011, 0b1100001);
 
 
 #undef INSN
@@ -1182,7 +1182,7 @@ enum operand_size { int8, int16, int32, uint32, int64 };
   }
 
   INSN(fmv_w_x,  0b1010011, 0b000, 0b00000, 0b1111000);
-  INSN(fmv_d_x,  0b1010011, 0b000, 0b00000, 0b1111001);
+  // INSN(fmv_d_x,  0b1010011, 0b000, 0b00000, 0b1111001);
 
 #undef INSN
 
@@ -1202,7 +1202,7 @@ enum operand_size { int8, int16, int32, uint32, int64 };
   INSN(fclass_s, 0b1010011, 0b001, 0b00000, 0b1110000);
   INSN(fclass_d, 0b1010011, 0b001, 0b00000, 0b1110001);
   INSN(fmv_x_w,  0b1010011, 0b000, 0b00000, 0b1110000);
-  INSN(fmv_x_d,  0b1010011, 0b000, 0b00000, 0b1110001);
+  // INSN(fmv_x_d,  0b1010011, 0b000, 0b00000, 0b1110001);
 
 #undef INSN
 
@@ -1227,9 +1227,9 @@ enum operand_size { int8, int16, int32, uint32, int64 };
 
   // calculate pseudoinstruction
   void add(Register Rd, Register Rn, int64_t increment, Register temp = t0);
-  void addw(Register Rd, Register Rn, int64_t increment, Register temp = t0);
+  // void addw(Register Rd, Register Rn, int64_t increment, Register temp = t0);
   void sub(Register Rd, Register Rn, int64_t decrement, Register temp = t0);
-  void subw(Register Rd, Register Rn, int64_t decrement, Register temp = t0);
+  // void subw(Register Rd, Register Rn, int64_t decrement, Register temp = t0);
 
   Assembler(CodeBuffer* code) : AbstractAssembler(code) {
   }

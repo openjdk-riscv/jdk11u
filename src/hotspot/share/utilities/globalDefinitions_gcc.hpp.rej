@@ -1,0 +1,12 @@
+diff a/src/hotspot/share/utilities/globalDefinitions_gcc.hpp b/src/hotspot/share/utilities/globalDefinitions_gcc.hpp	(rejected hunks)
+@@ -268,6 +268,10 @@ inline int wcslen(const jchar* x) { return wcslen((const wchar_t*)x); }
+ #define USE_LIBRARY_BASED_TLS_ONLY 1
+ #endif
+ 
++#if defined(RISCV32)
++#define USE_LIBRARY_BASED_TLS_ONLY 1
++#endif
++
+ #ifndef USE_LIBRARY_BASED_TLS_ONLY
+ #define THREAD_LOCAL_DECL __thread
+ #endif

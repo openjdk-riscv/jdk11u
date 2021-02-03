@@ -78,7 +78,7 @@ address JNI_FastGetField::generate_fast_get_int_field0(BasicType type) {
   __ addi(rcounter_addr, rcounter_addr, offset);
 
   Address safepoint_counter_addr(rcounter_addr, 0);
-  __ lwu(rcounter, safepoint_counter_addr);
+  __ lw(rcounter, safepoint_counter_addr);
   // An even value means there are no ongoing safepoint operations
   __ andi(t0, rcounter, 1);
   __ bnez(t0, slow);
@@ -103,7 +103,7 @@ address JNI_FastGetField::generate_fast_get_int_field0(BasicType type) {
     case T_CHAR:    __ lhu(result, Address(roffset, 0)); break;
     case T_SHORT:   __ lh(result, Address(roffset, 0)); break;
     case T_INT:     __ lw(result, Address(roffset, 0)); break;
-    case T_LONG:    __ ld(result, Address(roffset, 0)); break;
+    //case T_LONG:    __ ld(result, Address(roffset, 0)); break;
     case T_FLOAT: {
       __ flw(f28, Address(roffset, 0)); // f28 as temporaries
       __ fmv_x_w(result, f28); // f{31--0}-->x
@@ -111,7 +111,7 @@ address JNI_FastGetField::generate_fast_get_int_field0(BasicType type) {
     }
     case T_DOUBLE: {
       __ fld(f28, Address(roffset, 0)); // f28 as temporaries
-      __ fmv_x_d(result, f28); // d{63--0}-->x
+      __ fcvt_w_d(result, f28); // d{63--0}-->x
       break;
     }
     default:        ShouldNotReachHere();
@@ -125,7 +125,7 @@ address JNI_FastGetField::generate_fast_get_int_field0(BasicType type) {
 
   switch (type) {
     case T_FLOAT:   __ fmv_w_x(f10, result); break;
-    case T_DOUBLE:  __ fmv_d_x(f10, result); break;
+    case T_DOUBLE:  __ fcvt_d_w(f10, result); break;
     default:        __ mv(x10, result);   break;
   }
   __ ret();

@@ -201,16 +201,16 @@ void LIR_Assembler::osr_entry() {
       // verify the interpreter's monitor has a non-null object
       {
         Label L;
-        __ ld(t0, Address(OSR_buf, slot_offset + 1 * BytesPerWord));
+        __ lw(t0, Address(OSR_buf, slot_offset + 1 * BytesPerWord));
         __ bnez(t0, L);
         __ stop("locked object is NULL");
         __ bind(L);
       }
 #endif // ASSERT
-      __ ld(x9, Address(OSR_buf, slot_offset + 0));
-      __ sd(x9, frame_map()->address_for_monitor_lock(i));
-      __ ld(x9, Address(OSR_buf, slot_offset + 1 * BytesPerWord));
-      __ sd(x9, frame_map()->address_for_monitor_object(i));
+      __ lw(x9, Address(OSR_buf, slot_offset + 0));
+      __ sw(x9, frame_map()->address_for_monitor_lock(i));
+      __ lw(x9, Address(OSR_buf, slot_offset + 1 * BytesPerWord));
+      __ sw(x9, frame_map()->address_for_monitor_object(i));
     }
   }
 }
@@ -307,9 +307,9 @@ int LIR_Assembler::emit_unwind_handler() {
   int offset = code_offset();
 
   // Fetch the exception from TLS and clear out exception related thread state
-  __ ld(x10, Address(xthread, JavaThread::exception_oop_offset()));
-  __ sd(zr, Address(xthread, JavaThread::exception_oop_offset()));
-  __ sd(zr, Address(xthread, JavaThread::exception_pc_offset()));
+  __ lw(x10, Address(xthread, JavaThread::exception_oop_offset()));
+  __ sw(zr, Address(xthread, JavaThread::exception_oop_offset()));
+  __ sw(zr, Address(xthread, JavaThread::exception_pc_offset()));
 
   __ bind(_unwind_handler_entry);
   __ verify_not_null_oop(x10);
@@ -469,7 +469,7 @@ void LIR_Assembler::const2stack(LIR_Opr src, LIR_Opr dest) {
   switch (c->type()) {
     case T_OBJECT:
       if (c->as_jobject() == NULL) {
-        __ sd(zr, frame_map()->address_for_slot(dest->single_stack_ix()));
+        __ sw(zr, frame_map()->address_for_slot(dest->single_stack_ix()));
       } else {
         const2reg(src, FrameMap::t1_opr, lir_patch_none, NULL);
         reg2stack(FrameMap::t1_opr, dest, c->type(), false);
@@ -490,11 +490,11 @@ void LIR_Assembler::const2stack(LIR_Opr src, LIR_Opr dest) {
     case T_LONG:      // fall through
     case T_DOUBLE:
       if (c->as_jlong_bits() == 0) {
-        __ sd(zr, frame_map()->address_for_slot(dest->double_stack_ix(),
+        __ sw(zr, frame_map()->address_for_slot(dest->double_stack_ix(),
                                                 lo_word_offset_in_bytes));
       } else {
         __ mv(t1, (intptr_t)c->as_jlong_bits());
-        __ sd(t1, frame_map()->address_for_slot(dest->double_stack_ix(),
+        __ sw(t1, frame_map()->address_for_slot(dest->double_stack_ix(),
                                                 lo_word_offset_in_bytes));
       }
       break;
@@ -512,13 +512,13 @@ void LIR_Assembler::const2mem(LIR_Opr src, LIR_Opr dest, BasicType type, CodeEmi
   switch (type) {
     case T_ADDRESS:
       assert(c->as_jint() == 0, "should be");
-      insn = &Assembler::sd; break;
+      insn = &Assembler::sw; break;
     case T_LONG:
       assert(c->as_jlong() == 0, "should be");
-      insn = &Assembler::sd; break;
+      insn = &Assembler::sw; break;
     case T_DOUBLE:
       assert(c->as_jdouble() == 0.0, "should be");
-      insn = &Assembler::sd; break;
+      insn = &Assembler::sw; break;
     case T_INT:
       assert(c->as_jint() == 0, "should be");
       insn = &Assembler::sw; break;
@@ -531,7 +531,7 @@ void LIR_Assembler::const2mem(LIR_Opr src, LIR_Opr dest, BasicType type, CodeEmi
       if (UseCompressedOops && !wide) {
         insn = &Assembler::sw;
       } else {
-        insn = &Assembler::sd;
+        insn = &Assembler::sw;
       }
       break;
     case T_CHAR:      // fall through
@@ -545,7 +545,7 @@ void LIR_Assembler::const2mem(LIR_Opr src, LIR_Opr dest, BasicType type, CodeEmi
       insn = &Assembler::sb; break;
     default:
       ShouldNotReachHere();
-      insn = &Assembler::sd;  // unreachable
+      insn = &Assembler::sw;  // unreachable
   }
   if (info != NULL) {
     add_debug_info_for_null_check_here(info);
@@ -599,22 +599,22 @@ void LIR_Assembler::reg2stack(LIR_Opr src, LIR_Opr dest, BasicType type, bool po
   assert(dest->is_stack(), "should not call otherwise");
   if (src->is_single_cpu()) {
     if (type == T_ARRAY || type == T_OBJECT) {
-      __ sd(src->as_register(), frame_map()->address_for_slot(dest->single_stack_ix()));
+      __ sw(src->as_register(), frame_map()->address_for_slot(dest->single_stack_ix()));
       __ verify_oop(src->as_register());
     } else if (type == T_METADATA || type == T_DOUBLE || type == T_ADDRESS) {
-      __ sd(src->as_register(), frame_map()->address_for_slot(dest->single_stack_ix()));
+      __ sw(src->as_register(), frame_map()->address_for_slot(dest->single_stack_ix()));
     } else {
       __ sw(src->as_register(), frame_map()->address_for_slot(dest->single_stack_ix()));
     }
   } else if (src->is_double_cpu()) {
     Address dest_addr_LO = frame_map()->address_for_slot(dest->double_stack_ix(), lo_word_offset_in_bytes);
-    __ sd(src->as_register_lo(), dest_addr_LO);
+    __ sw(src->as_register_lo(), dest_addr_LO);
   } else if (src->is_single_fpu()) {
     Address dest_addr = frame_map()->address_for_slot(dest->single_stack_ix());
     __ fsw(src->as_float_reg(), dest_addr);
   } else if (src->is_double_fpu()) {
     Address dest_addr = frame_map()->address_for_slot(dest->double_stack_ix());
-    __ fsd(src->as_double_reg(), dest_addr);
+    __ fsw(src->as_double_reg(), dest_addr);
   } else {
     ShouldNotReachHere();
   }
@@ -649,7 +649,7 @@ void LIR_Assembler::reg2mem(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
       break;
 
     case T_DOUBLE:
-      __ fsd(src->as_double_reg(), as_Address(to_addr));
+      __ fsw(src->as_double_reg(), as_Address(to_addr));
       break;
 
     case T_ARRAY:      // fall through
@@ -657,7 +657,7 @@ void LIR_Assembler::reg2mem(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
       if (UseCompressedOops && !wide) {
         __ sw(compressed_src, as_Address(to_addr));
       } else {
-        __ sd(compressed_src, as_Address(to_addr));
+        __ sw(compressed_src, as_Address(to_addr));
       }
       break;
     case T_METADATA:
@@ -666,16 +666,16 @@ void LIR_Assembler::reg2mem(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
       // compressed klass ptrs: T_METADATA can be compressed klass
       // ptr or a 64 bit method pointer.
       ShouldNotReachHere();
-      __ sd(src->as_register(), as_Address(to_addr));
+      __ sw(src->as_register(), as_Address(to_addr));
       break;
     case T_ADDRESS:
-      __ sd(src->as_register(), as_Address(to_addr));
+      __ sw(src->as_register(), as_Address(to_addr));
       break;
     case T_INT:
       __ sw(src->as_register(), as_Address(to_addr));
       break;
     case T_LONG:
-      __ sd(src->as_register_lo(), as_Address(to_addr));
+      __ sw(src->as_register_lo(), as_Address(to_addr));
       break;
     case T_BYTE:    // fall through
     case T_BOOLEAN:
@@ -702,16 +702,16 @@ void LIR_Assembler::stack2reg(LIR_Opr src, LIR_Opr dest, BasicType type) {
     if (type == T_INT) {
       __ lw(dest->as_register(), frame_map()->address_for_slot(src->single_stack_ix()));
     } else if (type == T_ARRAY || type == T_OBJECT) {
-      __ ld(dest->as_register(), frame_map()->address_for_slot(src->single_stack_ix()));
+      __ lw(dest->as_register(), frame_map()->address_for_slot(src->single_stack_ix()));
       __ verify_oop(dest->as_register());
     } else if (type == T_METADATA || type == T_ADDRESS) {
-      __ ld(dest->as_register(), frame_map()->address_for_slot(src->single_stack_ix()));
+      __ lw(dest->as_register(), frame_map()->address_for_slot(src->single_stack_ix()));
     } else {
-      __ lwu(dest->as_register(), frame_map()->address_for_slot(src->single_stack_ix()));
+      __ lw(dest->as_register(), frame_map()->address_for_slot(src->single_stack_ix()));
     }
   } else if (dest->is_double_cpu()) {
     Address src_addr_LO = frame_map()->address_for_slot(src->double_stack_ix(), lo_word_offset_in_bytes);
-    __ ld(dest->as_register_lo(), src_addr_LO);
+    __ lw(dest->as_register_lo(), src_addr_LO);
   } else if (dest->is_single_fpu()) {
     Address src_addr = frame_map()->address_for_slot(src->single_stack_ix());
     __ flw(dest->as_float_reg(), src_addr);
@@ -796,9 +796,9 @@ void LIR_Assembler::mem2reg(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
     case T_ARRAY:     // fall through
     case T_OBJECT:
       if (UseCompressedOops && !wide) {
-        __ lwu(dest->as_register(), as_Address(from_addr));
+        __ lw(dest->as_register(), as_Address(from_addr));
       } else {
-        __ ld(dest->as_register(), as_Address(from_addr));
+        __ lw(dest->as_register(), as_Address(from_addr));
       }
       break;
     case T_METADATA:
@@ -807,20 +807,20 @@ void LIR_Assembler::mem2reg(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
       // compressed klass ptrs: T_METADATA can be a compressed klass
       // ptr or a 64 bit method pointer.
       ShouldNotReachHere();
-      __ ld(dest->as_register(), as_Address(from_addr));
+      __ lw(dest->as_register(), as_Address(from_addr));
       break;
     case T_ADDRESS:
       if (UseCompressedClassPointers && addr->disp() == oopDesc::klass_offset_in_bytes()) {
-        __ lwu(dest->as_register(), as_Address(from_addr));
+        __ lw(dest->as_register(), as_Address(from_addr));
       } else {
-        __ ld(dest->as_register(), as_Address(from_addr));
+        __ lw(dest->as_register(), as_Address(from_addr));
       }
       break;
     case T_INT:
       __ lw(dest->as_register(), as_Address(from_addr));
       break;
     case T_LONG:
-      __ ld(dest->as_register_lo(), as_Address_lo(from_addr));
+      __ lw(dest->as_register_lo(), as_Address_lo(from_addr));
       break;
     case T_BYTE:
       __ lb(dest->as_register(), as_Address(from_addr));
@@ -958,10 +958,10 @@ void LIR_Assembler::emit_opConvert(LIR_OpConvert* op) {
       __ fcvt_s_w(dest->as_float_reg(), src->as_register()); break;
     case Bytecodes::_i2d:
       __ fcvt_d_w(dest->as_double_reg(), src->as_register()); break;
-    case Bytecodes::_l2d:
-      __ fcvt_d_l(dest->as_double_reg(), src->as_register_lo()); break;
-    case Bytecodes::_l2f:
-      __ fcvt_s_l(dest->as_float_reg(), src->as_register_lo()); break;
+    // case Bytecodes::_l2d:
+    //   __ fcvt_d_l(dest->as_double_reg(), src->as_register_lo()); break;
+    // case Bytecodes::_l2f:
+    //   __ fcvt_s_l(dest->as_float_reg(), src->as_register_lo()); break;
     case Bytecodes::_f2d:
       __ fcvt_d_s(dest->as_double_reg(), src->as_float_reg()); break;
     case Bytecodes::_d2f:
@@ -969,14 +969,14 @@ void LIR_Assembler::emit_opConvert(LIR_OpConvert* op) {
     case Bytecodes::_i2c:
       __ zero_ext(dest->as_register(), src->as_register(), registerSize - 16); break; // 16: char size
     case Bytecodes::_i2l:
-      __ addw(dest->as_register_lo(), src->as_register(), zr); break;
+      __ add(dest->as_register_lo(), src->as_register(), zr); break;
     case Bytecodes::_i2s:
       __ sign_ext(dest->as_register(), src->as_register(), registerSize - 16); break; // 16: short size
     case Bytecodes::_i2b:
       __ sign_ext(dest->as_register(), src->as_register(), registerSize - 8); break;  // 8: byte size
     case Bytecodes::_l2i:
       _masm->block_comment("FIXME: This coulde be no-op");
-      __ addw(dest->as_register(), src->as_register_lo(), zr); break;
+      __ add(dest->as_register(), src->as_register_lo(), zr); break;
     case Bytecodes::_d2l:
       __ fcvt_l_d_safe(dest->as_register_lo(), src->as_double_reg()); break;
     case Bytecodes::_f2i:
@@ -1047,7 +1047,7 @@ void LIR_Assembler::type_profile_helper(Register mdo, ciMethodData *md, ciProfil
   for (uint i = 0; i < ReceiverTypeData::row_limit(); i++) {
     Label next_test;
     // See if the receiver is receiver[n].
-    __ ld(t1, Address(mdo, md->byte_offset_of_slot(data, ReceiverTypeData::receiver_offset(i))));
+    __ lw(t1, Address(mdo, md->byte_offset_of_slot(data, ReceiverTypeData::receiver_offset(i))));
     __ bne(recv, t1, next_test);
     Address data_addr(mdo, md->byte_offset_of_slot(data, ReceiverTypeData::receiver_count_offset(i)));
     __ add_memory_int64(data_addr, DataLayout::counter_increment);
@@ -1059,11 +1059,11 @@ void LIR_Assembler::type_profile_helper(Register mdo, ciMethodData *md, ciProfil
   for (uint i = 0; i < ReceiverTypeData::row_limit(); i++) {
     Label next_test;
     Address recv_addr(mdo, md->byte_offset_of_slot(data, ReceiverTypeData::receiver_offset(i)));
-    __ ld(t1, recv_addr);
+    __ lw(t1, recv_addr);
     __ bnez(t1, next_test);
-    __ sd(recv, recv_addr);
+    __ sw(recv, recv_addr);
     __ li(t1, DataLayout::counter_increment);
-    __ sd(t1, Address(mdo, md->byte_offset_of_slot(data, ReceiverTypeData::receiver_count_offset(i))));
+    __ sw(t1, Address(mdo, md->byte_offset_of_slot(data, ReceiverTypeData::receiver_count_offset(i))));
     __ j(*update_done);
     __ bind(next_test);
   }
@@ -1088,7 +1088,7 @@ void LIR_Assembler::typecheck_helper_slowcheck(ciKlass *k, Register obj, Registe
   __ load_klass(klass_RInfo, obj);
   if (k->is_loaded()) {
     // See if we get an immediate positive hit
-    __ ld(t0, Address(klass_RInfo, long(k->super_check_offset())));
+    __ lw(t0, Address(klass_RInfo, long(k->super_check_offset())));
     if ((juint)in_bytes(Klass::secondary_super_cache_offset()) != k->super_check_offset()) {
       __ bne(k_RInfo, t0, *failure_target, /* is_far */ true);
       // successful cast, fall through to profile or jump
@@ -1099,11 +1099,11 @@ void LIR_Assembler::typecheck_helper_slowcheck(ciKlass *k, Register obj, Registe
       __ beq(klass_RInfo, k_RInfo, *success_target);
 
       __ addi(sp, sp, -2 * wordSize); // 2: store k_RInfo and klass_RInfo
-      __ sd(k_RInfo, Address(sp, 0));             // sub klass
-      __ sd(klass_RInfo, Address(sp, wordSize));  // super klass
+      __ sw(k_RInfo, Address(sp, 0));             // sub klass
+      __ sw(klass_RInfo, Address(sp, wordSize));  // super klass
       __ far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::slow_subtype_check_id)));
       // load result to k_RInfo
-      __ ld(k_RInfo, Address(sp, 0));
+      __ lw(k_RInfo, Address(sp, 0));
       __ addi(sp, sp, 2 * wordSize); // 2: pop out k_RInfo and klass_RInfo
       // result is a boolean
       __ beqz(k_RInfo, *failure_target, /* is_far */ true);
@@ -1114,11 +1114,11 @@ void LIR_Assembler::typecheck_helper_slowcheck(ciKlass *k, Register obj, Registe
     __ check_klass_subtype_fast_path(klass_RInfo, k_RInfo, Rtmp1, success_target, failure_target, NULL);
     // call out-of-line instance of __ check_klass_subtytpe_slow_path(...)
     __ addi(sp, sp, -2 * wordSize); // 2: store k_RInfo and klass_RInfo
-    __ sd(klass_RInfo, Address(sp, wordSize));  // sub klass
-    __ sd(k_RInfo, Address(sp, 0));             // super klass
+    __ sw(klass_RInfo, Address(sp, wordSize));  // sub klass
+    __ sw(k_RInfo, Address(sp, 0));             // super klass
     __ far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::slow_subtype_check_id)));
     // load result to k_RInfo
-    __ ld(k_RInfo, Address(sp, 0));
+    __ lw(k_RInfo, Address(sp, 0));
     __ addi(sp, sp, 2 * wordSize); // 2: pop out k_RInfo and klass_RInfo
     // result is a boolean
     __ beqz(k_RInfo, *failure_target, /* is_far */ true);
@@ -1289,7 +1289,7 @@ void LIR_Assembler::logic_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
       int right_const = right->as_jint();
       if (Assembler::operand_valid_for_add_immediate(right_const)) {
         logic_op_imm(Rdst, Rleft, right_const, code);
-        __ addw(Rdst, Rdst, zr);
+        __ add(Rdst, Rdst, zr);
      } else {
         __ mv(t0, right_const);
         logic_op_reg32(Rdst, Rleft, t0, code);
@@ -1425,9 +1425,9 @@ void LIR_Assembler::shift_op(LIR_Code code, LIR_Opr left, LIR_Opr count, LIR_Opr
     assert (left->type() == T_INT, "unexpected left type");
     __ andi(t0, count_reg, 31); // should not shift more than 31 bits
     switch (code) {
-      case lir_shl:  __ sllw(dest_reg, left_reg, t0); break;
-      case lir_shr:  __ sraw(dest_reg, left_reg, t0); break;
-      case lir_ushr: __ srlw(dest_reg, left_reg, t0); break;
+      case lir_shl:  __ sll(dest_reg, left_reg, t0); break;
+      case lir_shr:  __ sra(dest_reg, left_reg, t0); break;
+      case lir_ushr: __ srl(dest_reg, left_reg, t0); break;
       default: ShouldNotReachHere();
     }
   } else if (dest->is_double_cpu()) {
@@ -1453,9 +1453,9 @@ void LIR_Assembler::shift_op(LIR_Code code, LIR_Opr left, jint count, LIR_Opr de
     count &= 0x1f;
     if (count != 0) {
       switch (code) {
-        case lir_shl:  __ slliw(dest_reg, left_reg, count); break;
-        case lir_shr:  __ sraiw(dest_reg, left_reg, count); break;
-        case lir_ushr: __ srliw(dest_reg, left_reg, count); break;
+        case lir_shl:  __ slli(dest_reg, left_reg, count); break;
+        case lir_shr:  __ srai(dest_reg, left_reg, count); break;
+        case lir_ushr: __ srli(dest_reg, left_reg, count); break;
         default: ShouldNotReachHere();
       }
     } else {
@@ -1553,7 +1553,7 @@ void LIR_Assembler::emit_profile_call(LIR_OpProfileCall* op) {
         if (receiver == NULL) {
           Address recv_addr(mdo, md->byte_offset_of_slot(data, VirtualCallData::receiver_offset(i)));
           __ mov_metadata(t1, known_klass->constant_encoding());
-          __ sd(t1, recv_addr);
+          __ sw(t1, recv_addr);
           Address data_addr(mdo, md->byte_offset_of_slot(data, VirtualCallData::receiver_count_offset(i)));
           __ add_memory_int64(data_addr, DataLayout::counter_increment);
           return;
@@ -1593,7 +1593,7 @@ void LIR_Assembler::check_conflict(ciKlass* exact_klass, intptr_t current_klass,
       __ load_klass(tmp, tmp);
     }
 
-    __ ld(t1, mdo_addr);
+    __ lw(t1, mdo_addr);
     __ xorr(tmp, tmp, t1);
     __ andi(t0, tmp, TypeEntries::type_klass_mask);
     // klass seen before, nothing to do. The unknown bit may have been
@@ -1612,7 +1612,7 @@ void LIR_Assembler::check_conflict(ciKlass* exact_klass, intptr_t current_klass,
       // data from memory) fail if another thread has just set the
       // profiling to this obj's klass
       __ membar(MacroAssembler::LoadLoad);
-      __ ld(t1, mdo_addr);
+      __ lw(t1, mdo_addr);
       __ xorr(tmp, tmp, t1);
       __ andi(t0, tmp, TypeEntries::type_klass_mask);
       __ beqz(t0, next);
@@ -1621,23 +1621,23 @@ void LIR_Assembler::check_conflict(ciKlass* exact_klass, intptr_t current_klass,
     assert(ciTypeEntries::valid_ciklass(current_klass) != NULL &&
            ciTypeEntries::valid_ciklass(current_klass) != exact_klass, "conflict only");
 
-    __ ld(tmp, mdo_addr);
+    __ lw(tmp, mdo_addr);
     // already unknown. Nothing to do anymore.
     __ andi(t0, tmp, TypeEntries::type_unknown);
     __ bnez(t0, next);
   }
 
   // different than before. Cannot keep accurate profile.
-  __ ld(t1, mdo_addr);
+  __ lw(t1, mdo_addr);
   __ ori(t1, t1, TypeEntries::type_unknown);
-  __ sd(t1, mdo_addr);
+  __ sw(t1, mdo_addr);
 
   if (TypeEntries::is_type_none(current_klass)) {
     __ j(next);
 
     __ bind(none);
     // first time here. Set profile type.
-    __ sd(tmp, mdo_addr);
+    __ sw(tmp, mdo_addr);
   }
 }
 
@@ -1647,21 +1647,21 @@ void LIR_Assembler::check_no_conflict(ciKlass* exact_klass, intptr_t current_kla
   assert(exact_klass != NULL, "should be");
   if (TypeEntries::is_type_none(current_klass)) {
     __ mov_metadata(tmp, exact_klass->constant_encoding());
-    __ ld(t1, mdo_addr);
+    __ lw(t1, mdo_addr);
     __ xorr(tmp, tmp, t1);
     __ andi(t0, tmp, TypeEntries::type_klass_mask);
     __ beqz(t0, next);
 #ifdef ASSERT
   {
     Label ok;
-    __ ld(t0, mdo_addr);
+    __ lw(t0, mdo_addr);
     __ beqz(t0, ok);
     __ li(t1, TypeEntries::null_seen);
     __ beq(t0, t1, ok);
     // may have been set by another thread
     __ membar(MacroAssembler::LoadLoad);
     __ mov_metadata(t0, exact_klass->constant_encoding());
-    __ ld(t1, mdo_addr);
+    __ lw(t1, mdo_addr);
     __ xorr(t1, t0, t1);
     __ andi(t1, t1, TypeEntries::type_mask);
     __ beqz(t1, ok);
@@ -1671,18 +1671,18 @@ void LIR_Assembler::check_no_conflict(ciKlass* exact_klass, intptr_t current_kla
   }
 #endif
     // first time here. Set profile type.
-    __ ld(tmp, mdo_addr);
+    __ lw(tmp, mdo_addr);
   } else {
     assert(ciTypeEntries::valid_ciklass(current_klass) != NULL &&
            ciTypeEntries::valid_ciklass(current_klass) != exact_klass, "inconsistent");
 
-    __ ld(tmp, mdo_addr);
+    __ lw(tmp, mdo_addr);
     // already unknown. Nothing to do anymore.
     __ andi(t0, tmp, TypeEntries::type_unknown);
     __ bnez(t0, next);
 
     __ ori(tmp, tmp, TypeEntries::type_unknown);
-    __ sd(tmp, mdo_addr);
+    __ sw(tmp, mdo_addr);
   }
 }
 
@@ -1690,9 +1690,9 @@ void LIR_Assembler::check_null(Register tmp, Label &update, intptr_t current_kla
                                Address mdo_addr, bool do_update, Label &next) {
   __ bnez(tmp, update);
   if (!TypeEntries::was_null_seen(current_klass)) {
-    __ ld(t1, mdo_addr);
+    __ lw(t1, mdo_addr);
     __ ori(t1, t1, TypeEntries::null_seen);
-    __ sd(t1, mdo_addr);
+    __ sw(t1, mdo_addr);
   }
   if (do_update) {
     __ j(next);
@@ -2159,9 +2159,9 @@ void LIR_Assembler::typecheck_lir_store(LIR_OpTypeCheck* op, bool should_profile
     __ bind(profile_cast_failure);
     __ mov_metadata(mdo, md->constant_encoding());
     Address counter_addr(mdo, md->byte_offset_of_slot(data, CounterData::count_offset()));
-    __ ld(t1, counter_addr);
+    __ lw(t1, counter_addr);
     __ addi(t1, t1, -DataLayout::counter_increment);
-    __ sd(t1, counter_addr);
+    __ sw(t1, counter_addr);
     __ j(*stub->entry());
   }
 
@@ -2183,25 +2183,25 @@ void LIR_Assembler::type_profile(Register obj, ciMethodData* md, Register klass_
   __ bind(profile_cast_failure);
   __ mov_metadata(mdo, md->constant_encoding());
   Address counter_addr = __ form_address(t1, mdo, md->byte_offset_of_slot(data, CounterData::count_offset()));
-  __ ld(t0, counter_addr);
+  __ lw(t0, counter_addr);
   __ addi(t0, t0, -DataLayout::counter_increment);
-  __ sd(t0, counter_addr);
+  __ sw(t0, counter_addr);
   __ j(*failure);
 }
 
 void LIR_Assembler::lir_store_slowcheck(Register k_RInfo, Register klass_RInfo, Register Rtmp1,
                                         Label* success_target, Label* failure_target) {
   // get instance klass (it's already uncompressed)
-  __ ld(k_RInfo, Address(k_RInfo, ObjArrayKlass::element_klass_offset()));
+  __ lw(k_RInfo, Address(k_RInfo, ObjArrayKlass::element_klass_offset()));
   // perform the fast part of the checking logic
   __ check_klass_subtype_fast_path(klass_RInfo, k_RInfo, Rtmp1, success_target, failure_target, NULL);
   // call out-of-line instance of __ check_klass_subtype_slow_path(...)
   __ addi(sp, sp, -2 * wordSize); // 2: store k_RInfo and klass_RInfo
-  __ sd(klass_RInfo, Address(sp, wordSize));  // sub klass
-  __ sd(k_RInfo, Address(sp, 0));             // super klass
+  __ sw(klass_RInfo, Address(sp, wordSize));  // sub klass
+  __ sw(k_RInfo, Address(sp, 0));             // super klass
   __ far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::slow_subtype_check_id)));
   // load result to k_RInfo
-  __ ld(k_RInfo, Address(sp, 0));
+  __ lw(k_RInfo, Address(sp, 0));
   __ addi(sp, sp, 2 * wordSize); // 2: pop out k_RInfo and klass_RInfo
   // result is a boolean
   __ beqz(k_RInfo, *failure_target, /* is_far */ true);
@@ -2257,7 +2257,7 @@ void LIR_Assembler::store_parameter(Register r, int offset_from_rsp_in_words) {
   assert(offset_from_rsp_in_words >= 0, "invalid offset from rsp");
   int offset_from_rsp_in_bytes = offset_from_rsp_in_words * BytesPerWord;
   assert(offset_from_rsp_in_bytes < frame_map()->reserved_argument_area_size(), "invalid offset");
-  __ sd(r, Address(sp, offset_from_rsp_in_bytes));
+  __ sw(r, Address(sp, offset_from_rsp_in_bytes));
 }
 
 void LIR_Assembler::store_parameter(jint c, int offset_from_rsp_in_words) {
@@ -2265,7 +2265,7 @@ void LIR_Assembler::store_parameter(jint c, int offset_from_rsp_in_words) {
   int offset_from_rsp_in_bytes = offset_from_rsp_in_words * BytesPerWord;
   assert(offset_from_rsp_in_bytes < frame_map()->reserved_argument_area_size(), "invalid offset");
   __ li(t0, c);
-  __ sd(t0, Address(sp, offset_from_rsp_in_bytes));
+  __ sw(t0, Address(sp, offset_from_rsp_in_bytes));
 }
 
 #undef __

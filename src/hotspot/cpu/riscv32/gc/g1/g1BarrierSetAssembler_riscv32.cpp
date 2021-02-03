@@ -111,7 +111,7 @@ void G1BarrierSetAssembler::g1_write_barrier_pre(MacroAssembler* masm,
 
   // Is marking active?
   if (in_bytes(SATBMarkQueue::byte_width_of_active()) == 4) { // 4-byte width
-    __ lwu(tmp, in_progress);
+    __ lw(tmp, in_progress);
   } else {
     assert(in_bytes(SATBMarkQueue::byte_width_of_active()) == 1, "Assumption");
     __ lbu(tmp, in_progress);
@@ -130,17 +130,17 @@ void G1BarrierSetAssembler::g1_write_barrier_pre(MacroAssembler* masm,
   // Is index == 0?
   // (The index field is typed as size_t.)
 
-  __ ld(tmp, index);                       // tmp := *index_adr
+  __ lw(tmp, index);                       // tmp := *index_adr
   __ beqz(tmp, runtime);                   // tmp == 0?
                                            // If yes, goto runtime
 
   __ sub(tmp, tmp, wordSize);              // tmp := tmp - wordSize
-  __ sd(tmp, index);                       // *index_adr := tmp
-  __ ld(t0, buffer);
+  __ sw(tmp, index);                       // *index_adr := tmp
+  __ lw(t0, buffer);
   __ add(tmp, tmp, t0);                    // tmp := tmp + *buffer_adr
 
   // Record the previous value
-  __ sd(pre_val, Address(tmp, 0));
+  __ sw(pre_val, Address(tmp, 0));
   __ j(done);
 
   __ bind(runtime);
@@ -225,14 +225,14 @@ void G1BarrierSetAssembler::g1_write_barrier_post(MacroAssembler* masm,
 
   __ sb(zr, Address(card_addr));
 
-  __ ld(t0, queue_index);
+  __ lw(t0, queue_index);
   __ beqz(t0, runtime);
   __ sub(t0, t0, wordSize);
-  __ sd(t0, queue_index);
+  __ sw(t0, queue_index);
 
-  __ ld(tmp2, buffer);
+  __ lw(tmp2, buffer);
   __ add(t0, tmp2, t0);
-  __ sd(card_addr, Address(t0, 0));
+  __ sw(card_addr, Address(t0, 0));
   __ j(done);
 
   __ bind(runtime);
@@ -369,7 +369,7 @@ void G1BarrierSetAssembler::generate_c1_pre_barrier_runtime_stub(StubAssembler* 
 
   // Is marking still active?
   if (in_bytes(SATBMarkQueue::byte_width_of_active()) == 4) {  // 4-byte width
-    __ lwu(tmp, in_progress);
+    __ lw(tmp, in_progress);
   } else {
     assert(in_bytes(SATBMarkQueue::byte_width_of_active()) == 1, "Assumption");
     __ lbu(tmp, in_progress);
@@ -377,15 +377,15 @@ void G1BarrierSetAssembler::generate_c1_pre_barrier_runtime_stub(StubAssembler* 
   __ beqz(tmp, done);
 
   // Can we store original value in the thread's buffer?
-  __ ld(tmp, queue_index);
+  __ lw(tmp, queue_index);
   __ beqz(tmp, runtime);
 
   __ sub(tmp, tmp, wordSize);
-  __ sd(tmp, queue_index);
-  __ ld(t1, buffer);
+  __ sw(tmp, queue_index);
+  __ lw(t1, buffer);
   __ add(tmp, tmp, t1);
   __ load_parameter(0, t1);
-  __ sd(t1, Address(tmp, 0));
+  __ sw(t1, Address(tmp, 0));
   __ j(done);
 
   __ bind(runtime);
@@ -447,17 +447,17 @@ void G1BarrierSetAssembler::generate_c1_post_barrier_runtime_stub(StubAssembler*
   // dirty card and log.
   __ sb(zr, Address(card_addr, 0));
 
-  __ ld(t0, queue_index);
+  __ lw(t0, queue_index);
   __ beqz(t0, runtime);
   __ sub(t0, t0, wordSize);
-  __ sd(t0, queue_index);
+  __ sw(t0, queue_index);
 
   // Reuse LR to hold buffer_addr
   const Register buffer_addr = lr;
 
-  __ ld(buffer_addr, buffer);
+  __ lw(buffer_addr, buffer);
   __ add(t0, buffer_addr, t0);
-  __ sd(card_addr, Address(t0, 0));
+  __ sw(card_addr, Address(t0, 0));
   __ j(done);
 
   __ bind(runtime);

@@ -529,51 +529,51 @@ bool os::has_allocatable_memory_limit(julong* limit) {
 #ifdef _LP64
   return result;
 #else
-  // arbitrary virtual space limit for 32 bit Unices found by testing. If
-  // getrlimit above returned a limit, bound it with this limit. Otherwise
-  // directly use it.
-  const julong max_virtual_limit = (julong)3800*M;
-  if (result) {
-    *limit = MIN2(*limit, max_virtual_limit);
-  } else {
-    *limit = max_virtual_limit;
-  }
+  // // arbitrary virtual space limit for 32 bit Unices found by testing. If
+  // // getrlimit above returned a limit, bound it with this limit. Otherwise
+  // // directly use it.
+  // const julong max_virtual_limit = (julong)3800*M;
+  // if (result) {
+  //   *limit = MIN2(*limit, max_virtual_limit);
+  // } else {
+  //   *limit = max_virtual_limit;
+  // }
 
-  // bound by actually allocatable memory. The algorithm uses two bounds, an
-  // upper and a lower limit. The upper limit is the current highest amount of
-  // memory that could not be allocated, the lower limit is the current highest
-  // amount of memory that could be allocated.
-  // The algorithm iteratively refines the result by halving the difference
-  // between these limits, updating either the upper limit (if that value could
-  // not be allocated) or the lower limit (if the that value could be allocated)
-  // until the difference between these limits is "small".
+  // // bound by actually allocatable memory. The algorithm uses two bounds, an
+  // // upper and a lower limit. The upper limit is the current highest amount of
+  // // memory that could not be allocated, the lower limit is the current highest
+  // // amount of memory that could be allocated.
+  // // The algorithm iteratively refines the result by halving the difference
+  // // between these limits, updating either the upper limit (if that value could
+  // // not be allocated) or the lower limit (if the that value could be allocated)
+  // // until the difference between these limits is "small".
 
-  // the minimum amount of memory we care about allocating.
-  const julong min_allocation_size = M;
+  // // the minimum amount of memory we care about allocating.
+  // const julong min_allocation_size = M;
 
-  julong upper_limit = *limit;
+  // julong upper_limit = *limit;
 
-  // first check a few trivial cases
-  if (is_allocatable(upper_limit) || (upper_limit <= min_allocation_size)) {
-    *limit = upper_limit;
-  } else if (!is_allocatable(min_allocation_size)) {
-    // we found that not even min_allocation_size is allocatable. Return it
-    // anyway. There is no point to search for a better value any more.
-    *limit = min_allocation_size;
-  } else {
-    // perform the binary search.
-    julong lower_limit = min_allocation_size;
-    while ((upper_limit - lower_limit) > min_allocation_size) {
-      julong temp_limit = ((upper_limit - lower_limit) / 2) + lower_limit;
-      temp_limit = align_down(temp_limit, min_allocation_size);
-      if (is_allocatable(temp_limit)) {
-        lower_limit = temp_limit;
-      } else {
-        upper_limit = temp_limit;
-      }
-    }
-    *limit = lower_limit;
-  }
+  // // first check a few trivial cases
+  // if (is_allocatable(upper_limit) || (upper_limit <= min_allocation_size)) {
+  //   *limit = upper_limit;
+  // } else if (!is_allocatable(min_allocation_size)) {
+  //   // we found that not even min_allocation_size is allocatable. Return it
+  //   // anyway. There is no point to search for a better value any more.
+  //   *limit = min_allocation_size;
+  // } else {
+  //   // perform the binary search.
+  //   julong lower_limit = min_allocation_size;
+  //   while ((upper_limit - lower_limit) > min_allocation_size) {
+  //     julong temp_limit = ((upper_limit - lower_limit) / 2) + lower_limit;
+  //     temp_limit = align_down(temp_limit, min_allocation_size);
+  //     if (is_allocatable(temp_limit)) {
+  //       lower_limit = temp_limit;
+  //     } else {
+  //       upper_limit = temp_limit;
+  //     }
+  //   }
+  //   *limit = lower_limit;
+  // }
   return true;
 #endif
 }

@@ -180,7 +180,7 @@ void RegisterSaver::restore_result_registers(MacroAssembler* masm) {
   // Restore fp result register
   __ fld(f10, Address(sp, f10_offset_in_bytes()));
   // Restore integer result register
-  __ ld(x10, Address(sp, x10_offset_in_bytes()));
+  __ lw(x10, Address(sp, x10_offset_in_bytes()));
 
   // Pop all of the register save are off the stack
   __ add(sp, sp, align_up(return_offset_in_bytes(), 16));
@@ -320,7 +320,7 @@ int SharedRuntime::java_calling_convention(const BasicType *sig_bt,
 static void patch_callers_callsite(MacroAssembler *masm) {
   assert_cond(masm != NULL);
   Label L;
-  __ ld(t0, Address(xmethod, in_bytes(Method::code_offset())));
+  __ lw(t0, Address(xmethod, in_bytes(Method::code_offset())));
   __ beqz(t0, L);
 
   __ enter();
@@ -415,31 +415,31 @@ static void gen_c2i_adapter(MacroAssembler *masm,
                     + extraspace
                     + words_pushed * wordSize);
       if (!r_2->is_valid()) {
-        __ lwu(t0, Address(sp, ld_off));
-        __ sd(t0, Address(sp, st_off), /*temp register*/esp);
+        __ lw(t0, Address(sp, ld_off));
+        __ sw(t0, Address(sp, st_off), /*temp register*/esp);
       } else {
-        __ ld(t0, Address(sp, ld_off), /*temp register*/esp);
+        __ lw(t0, Address(sp, ld_off), /*temp register*/esp);
 
         // Two VMREgs|OptoRegs can be T_OBJECT, T_ADDRESS, T_DOUBLE, T_LONG
         // T_DOUBLE and T_LONG use two slots in the interpreter
         if ( sig_bt[i] == T_LONG || sig_bt[i] == T_DOUBLE) {
           // ld_off == LSW, ld_off+wordSize == MSW
           // st_off == MSW, next_off == LSW
-          __ sd(t0, Address(sp, next_off), /*temp register*/esp);
+          __ sw(t0, Address(sp, next_off), /*temp register*/esp);
 #ifdef ASSERT
           // Overwrite the unused slot with known junk
           __ li(t0, 0xdeadffffdeadaaaaul);
-          __ sd(t0, Address(sp, st_off), /*temp register*/esp);
+          __ sw(t0, Address(sp, st_off), /*temp register*/esp);
 #endif /* ASSERT */
         } else {
-          __ sd(t0, Address(sp, st_off), /*temp register*/esp);
+          __ sw(t0, Address(sp, st_off), /*temp register*/esp);
         }
       }
     } else if (r_1->is_Register()) {
       Register r = r_1->as_Register();
       if (!r_2->is_valid()) {
         // must be only an int (or less ) so move only 32bits to slot
-        __ sd(r, Address(sp, st_off));
+        __ sw(r, Address(sp, st_off));
       } else {
         // Two VMREgs|OptoRegs can be T_OBJECT, T_ADDRESS, T_DOUBLE, T_LONG
         // T_DOUBLE and T_LONG use two slots in the interpreter
@@ -448,11 +448,11 @@ static void gen_c2i_adapter(MacroAssembler *masm,
 #ifdef ASSERT
           // Overwrite the unused slot with known junk
           __ li(t0, 0xdeadffffdeadaaabul);
-          __ sd(t0, Address(sp, st_off), /*temp register*/esp);
+          __ sw(t0, Address(sp, st_off), /*temp register*/esp);
 #endif /* ASSERT */
-          __ sd(r, Address(sp, next_off));
+          __ sw(r, Address(sp, next_off));
         } else {
-          __ sd(r, Address(sp, st_off));
+          __ sw(r, Address(sp, st_off));
         }
       }
     } else {
@@ -464,7 +464,7 @@ static void gen_c2i_adapter(MacroAssembler *masm,
 #ifdef ASSERT
         // Overwrite the unused slot with known junk
         __ li(t0, 0xdeadffffdeadaaacul);
-        __ sd(t0, Address(sp, st_off), /*temp register*/esp);
+        __ sw(t0, Address(sp, st_off), /*temp register*/esp);
 #endif /* ASSERT */
         __ fsd(r_1->as_FloatRegister(), Address(sp, next_off));
       }
@@ -473,7 +473,7 @@ static void gen_c2i_adapter(MacroAssembler *masm,
 
   __ mv(esp, sp); // Interp expects args on caller's expression stack
 
-  __ ld(t0, Address(xmethod, in_bytes(Method::interpreter_entry_offset())));
+  __ lw(t0, Address(xmethod, in_bytes(Method::interpreter_entry_offset())));
   __ jr(t0);
 }
 
@@ -492,7 +492,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm,
 
   // Will jump to the compiled code just as if compiled code was doing it.
   // Pre-load the register-jump target early, to schedule it better.
-  __ ld(t1, Address(xmethod, in_bytes(Method::from_compiled_offset())));
+  __ lw(t1, Address(xmethod, in_bytes(Method::from_compiled_offset())));
 
   // Now generate the shuffle code.
   for (int i = 0; i < total_args_passed; i++) {
@@ -521,7 +521,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm,
       int st_off = regs[i].first()->reg2stack() * VMRegImpl::stack_slot_size;
       if (!r_2->is_valid()) {
         __ lw(t0, Address(esp, ld_off));
-        __ sd(t0, Address(sp, st_off), /*temp register*/t2);
+        __ sw(t0, Address(sp, st_off), /*temp register*/t2);
       } else {
         //
         // We are using two optoregs. This can be either T_OBJECT,
@@ -536,9 +536,9 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm,
         // ld_off is MSW so get LSW
         const int offset = (sig_bt[i] == T_LONG || sig_bt[i] == T_DOUBLE) ?
                            next_off : ld_off;
-        __ ld(t0, Address(esp, offset));
+        __ lw(t0, Address(esp, offset));
         // st_off is LSW (i.e. reg.first())
-        __ sd(t0, Address(sp, st_off), /*temp register*/t2);
+        __ sw(t0, Address(sp, st_off), /*temp register*/t2);
       }
     } else if (r_1->is_Register()) {  // Register argument
       Register r = r_1->as_Register();
@@ -554,7 +554,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm,
                            next_off : ld_off;
 
         // this can be a misaligned move
-        __ ld(r, Address(esp, offset));
+        __ lw(r, Address(esp, offset));
       } else {
         // sign extend and use a full word?
         __ lw(r, Address(esp, ld_off));
@@ -578,7 +578,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm,
   // is possible. So we stash the desired callee in the thread
   // and the vm will find there should this case occur.
 
-  __ sd(xmethod, Address(xthread, JavaThread::callee_target_offset()));
+  __ sw(xmethod, Address(xthread, JavaThread::callee_target_offset()));
 
   __ jr(t1);
 }
@@ -615,8 +615,8 @@ AdapterHandlerEntry* SharedRuntime::generate_i2c2i_adapters(MacroAssembler *masm
   {
     __ block_comment("c2i_unverified_entry {");
     __ load_klass(t0, receiver);
-    __ ld(tmp, Address(holder, CompiledICHolder::holder_klass_offset()));
-    __ ld(xmethod, Address(holder, CompiledICHolder::holder_metadata_offset()));
+    __ lw(tmp, Address(holder, CompiledICHolder::holder_klass_offset()));
+    __ lw(xmethod, Address(holder, CompiledICHolder::holder_metadata_offset()));
     __ beq(t0, tmp, ok);
     __ far_jump(RuntimeAddress(SharedRuntime::get_ic_miss_stub()));
 
@@ -624,7 +624,7 @@ AdapterHandlerEntry* SharedRuntime::generate_i2c2i_adapters(MacroAssembler *masm
     // Method might have been compiled since the call site was patched to
     // interpreted; if that is the case treat it as a miss so we can get
     // the call site corrected.
-    __ ld(t0, Address(xmethod, in_bytes(Method::code_offset())));
+    __ lw(t0, Address(xmethod, in_bytes(Method::code_offset())));
     __ beqz(t0, skip_fixup);
     __ far_jump(RuntimeAddress(SharedRuntime::get_ic_miss_stub()));
     __ block_comment("} c2i_unverified_entry");
@@ -732,19 +732,19 @@ static void move32_64(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
   if (src.first()->is_stack()) {
     if (dst.first()->is_stack()) {
       // stack to stack
-      __ ld(t0, Address(fp, reg2offset_in(src.first())));
-      __ sd(t0, Address(sp, reg2offset_out(dst.first())));
+      __ lw(t0, Address(fp, reg2offset_in(src.first())));
+      __ sw(t0, Address(sp, reg2offset_out(dst.first())));
     } else {
       // stack to reg
       __ lw(dst.first()->as_Register(), Address(fp, reg2offset_in(src.first())));
     }
   } else if (dst.first()->is_stack()) {
     // reg to stack
-    __ sd(src.first()->as_Register(), Address(sp, reg2offset_out(dst.first())));
+    __ sw(src.first()->as_Register(), Address(sp, reg2offset_out(dst.first())));
   } else {
     if (dst.first() != src.first()) {
       // 32bits extend sign
-      __ addw(dst.first()->as_Register(), src.first()->as_Register(), zr);
+      __ add(dst.first()->as_Register(), src.first()->as_Register(), zr);
     }
   }
 }
@@ -773,7 +773,7 @@ static void object_move(MacroAssembler* masm,
       *receiver_offset = (offset_in_older_frame + framesize_in_slots) * VMRegImpl::stack_slot_size;
     }
 
-    __ ld(t0, Address(fp, reg2offset_in(src.first())));
+    __ lw(t0, Address(fp, reg2offset_in(src.first())));
     __ la(rHandle, Address(fp, reg2offset_in(src.first())));
     // conditionally move a NULL
     Label notZero1;
@@ -811,7 +811,7 @@ static void object_move(MacroAssembler* masm,
 
     map->set_oop(VMRegImpl::stack2reg(oop_slot));
     // Store oop in handle area, may be NULL
-    __ sd(rOop, Address(sp, offset));
+    __ sw(rOop, Address(sp, offset));
     if (is_receiver) {
       *receiver_offset = offset;
     }
@@ -833,7 +833,7 @@ static void object_move(MacroAssembler* masm,
 
   // If arg is on the stack then place it otherwise it is already in correct reg.
   if (dst.first()->is_stack()) {
-    __ sd(rHandle, Address(sp, reg2offset_out(dst.first())));
+    __ sw(rHandle, Address(sp, reg2offset_out(dst.first())));
   }
 }
 
@@ -844,10 +844,10 @@ static void float_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
   assert_cond(masm != NULL);
   if (src.first()->is_stack()) {
     if (dst.first()->is_stack()) {
-      __ lwu(t0, Address(fp, reg2offset_in(src.first())));
+      __ lw(t0, Address(fp, reg2offset_in(src.first())));
       __ sw(t0, Address(sp, reg2offset_out(dst.first())));
     } else if (dst.first()->is_Register()) {
-      __ lwu(dst.first()->as_Register(), Address(fp, reg2offset_in(src.first())));
+      __ lw(dst.first()->as_Register(), Address(fp, reg2offset_in(src.first())));
     } else {
       ShouldNotReachHere();
     }
@@ -866,15 +866,15 @@ static void long_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
   if (src.first()->is_stack()) {
     if (dst.first()->is_stack()) {
       // stack to stack
-      __ ld(t0, Address(fp, reg2offset_in(src.first())));
-      __ sd(t0, Address(sp, reg2offset_out(dst.first())));
+      __ lw(t0, Address(fp, reg2offset_in(src.first())));
+      __ sw(t0, Address(sp, reg2offset_out(dst.first())));
     } else {
       // stack to reg
-      __ ld(dst.first()->as_Register(), Address(fp, reg2offset_in(src.first())));
+      __ lw(dst.first()->as_Register(), Address(fp, reg2offset_in(src.first())));
     }
   } else if (dst.first()->is_stack()) {
     // reg to stack
-    __ sd(src.first()->as_Register(), Address(sp, reg2offset_out(dst.first())));
+    __ sw(src.first()->as_Register(), Address(sp, reg2offset_out(dst.first())));
   } else {
     if (dst.first() != src.first()) {
       __ mv(dst.first()->as_Register(), src.first()->as_Register());
@@ -889,10 +889,10 @@ static void double_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
   assert_cond(masm != NULL);
   if (src.first()->is_stack()) {
     if (dst.first()->is_stack()) {
-      __ ld(t0, Address(fp, reg2offset_in(src.first())));
-      __ sd(t0, Address(sp, reg2offset_out(dst.first())));
+      __ lw(t0, Address(fp, reg2offset_in(src.first())));
+      __ sw(t0, Address(sp, reg2offset_out(dst.first())));
     } else if (dst.first()-> is_Register()) {
-      __ ld(dst.first()->as_Register(), Address(fp, reg2offset_in(src.first())));
+      __ lw(dst.first()->as_Register(), Address(fp, reg2offset_in(src.first())));
     } else {
       ShouldNotReachHere();
     }
@@ -918,7 +918,7 @@ void SharedRuntime::save_native_result(MacroAssembler *masm, BasicType ret_type,
     break;
   case T_VOID:  break;
   default: {
-    __ sd(x10, Address(fp, -wordSize));
+    __ sw(x10, Address(fp, -wordSize));
     }
   }
 }
@@ -936,7 +936,7 @@ void SharedRuntime::restore_native_result(MacroAssembler *masm, BasicType ret_ty
     break;
   case T_VOID:  break;
   default: {
-    __ ld(x10, Address(fp, -wordSize));
+    __ lw(x10, Address(fp, -wordSize));
     }
   }
 }
@@ -1084,7 +1084,7 @@ static void verify_oop_args(MacroAssembler* masm,
         VMReg r = regs[i].first();
         assert(r->is_valid(), "bad oop arg");
         if (r->is_stack()) {
-          __ ld(temp_reg, Address(sp, r->reg2stack() * VMRegImpl::stack_slot_size));
+          __ lw(temp_reg, Address(sp, r->reg2stack() * VMRegImpl::stack_slot_size));
           __ verify_oop(temp_reg);
         } else {
           __ verify_oop(r->as_Register());
@@ -1123,7 +1123,7 @@ static void gen_special_dispatch(MacroAssembler* masm,
     SharedRuntime::check_member_name_argument_is_last_argument(method, sig_bt, regs);
     VMReg r = regs[member_arg_pos].first();
     if (r->is_stack()) {
-      __ ld(member_reg, Address(sp, r->reg2stack() * VMRegImpl::stack_slot_size));
+      __ lw(member_reg, Address(sp, r->reg2stack() * VMRegImpl::stack_slot_size));
     } else {
       // no data motion is needed
       member_reg = r->as_Register();
@@ -1142,7 +1142,7 @@ static void gen_special_dispatch(MacroAssembler* masm,
       // platform, pick a temp and load the receiver from stack.
       fatal("receiver always in a register");
       receiver_reg = x12;  // known to be free at this point
-      __ ld(receiver_reg, Address(sp, r->reg2stack() * VMRegImpl::stack_slot_size));
+      __ lw(receiver_reg, Address(sp, r->reg2stack() * VMRegImpl::stack_slot_size));
     } else {
       // no data motion is needed
       receiver_reg = r->as_Register();
@@ -1615,7 +1615,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
               /*immediate*/true);
 
     // Now handlize the static class mirror it's known not-null.
-    __ sd(c_rarg1, Address(sp, klass_offset));
+    __ sw(c_rarg1, Address(sp, klass_offset));
     map->set_oop(VMRegImpl::stack2reg(klass_slot_offset));
 
     // Now get the handle
@@ -1636,7 +1636,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     int32_t offset = 0;
     __ la_patchable(t0, ExternalAddress((address)&DTraceMethodProbes), offset);
     __ lbu(t0, Address(t0, offset));
-    __ addw(t0, t0, zr);
+    __ add(t0, t0, zr);
     __ bnez(t0, dtrace_method_entry);
     __ bind(dtrace_method_entry_done);
   }
@@ -1678,18 +1678,18 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     __ la(lock_reg, Address(sp, lock_slot_offset * VMRegImpl::stack_slot_size));
 
     // Load the oop from the handle
-    __ ld(obj_reg, Address(oop_handle_reg, 0));
+    __ lw(obj_reg, Address(oop_handle_reg, 0));
 
     if (UseBiasedLocking) {
       __ biased_locking_enter(lock_reg, obj_reg, swap_reg, tmp, false, lock_done, &slow_path_lock);
     }
 
     // Load (object->mark() | 1) into swap_reg % x10
-    __ ld(t0, Address(obj_reg, oopDesc::mark_offset_in_bytes()));
+    __ lw(t0, Address(obj_reg, oopDesc::mark_offset_in_bytes()));
     __ ori(swap_reg, t0, 1);
 
     // Save (object->mark() | 1) into BasicLock's displaced header
-    __ sd(swap_reg, Address(lock_reg, mark_word_offset));
+    __ sw(swap_reg, Address(lock_reg, mark_word_offset));
 
     // src -> dest if dest == x10 else x10 <- dest
     {
@@ -1710,7 +1710,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     __ andi(swap_reg, swap_reg, 3 - os::vm_page_size());
 
     // Save the test result, for recursive case, the result is zero
-    __ sd(swap_reg, Address(lock_reg, mark_word_offset));
+    __ sw(swap_reg, Address(lock_reg, mark_word_offset));
     __ bnez(swap_reg, slow_path_lock);
 
     // Slow path will re-enter here
@@ -1804,7 +1804,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   Label safepoint_in_progress, safepoint_in_progress_done;
   {
     __ safepoint_poll_acquire(safepoint_in_progress);
-    __ lwu(t0, Address(xthread, JavaThread::suspend_flags_offset()));
+    __ lw(t0, Address(xthread, JavaThread::suspend_flags_offset()));
     __ bnez(t0, safepoint_in_progress);
     __ bind(safepoint_in_progress_done);
   }
@@ -1832,7 +1832,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   if (method->is_synchronized()) {
 
     // Get locked oop from the handle we passed to jni
-    __ ld(obj_reg, Address(oop_handle_reg, 0));
+    __ lw(obj_reg, Address(oop_handle_reg, 0));
 
     Label done;
 
@@ -1842,7 +1842,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
     // Simple recursive lock?
 
-    __ ld(t0, Address(sp, lock_slot_offset * VMRegImpl::stack_slot_size));
+    __ lw(t0, Address(sp, lock_slot_offset * VMRegImpl::stack_slot_size));
     __ beqz(t0, done);
 
     // Must save x10 if if it is live now because cmpxchg must use it
@@ -1854,7 +1854,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     // get address of the stack lock
     __ la(x10, Address(sp, lock_slot_offset * VMRegImpl::stack_slot_size));
     //  get old displaced header
-    __ ld(old_hdr, Address(x10, 0));
+    __ lw(old_hdr, Address(x10, 0));
 
     // Atomic swap old header if oop still contains the stack lock
     Label succeed;
@@ -1888,20 +1888,20 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
   if (CheckJNICalls) {
     // clear_pending_jni_exception_check
-    __ sd(zr, Address(xthread, JavaThread::pending_jni_exception_check_fn_offset()));
+    __ sw(zr, Address(xthread, JavaThread::pending_jni_exception_check_fn_offset()));
   }
 
   if (!is_critical_native) {
     // reset handle block
-    __ ld(x12, Address(xthread, JavaThread::active_handles_offset()));
-    __ sd(zr, Address(x12, JNIHandleBlock::top_offset_in_bytes()));
+    __ lw(x12, Address(xthread, JavaThread::active_handles_offset()));
+    __ sw(zr, Address(x12, JNIHandleBlock::top_offset_in_bytes()));
   }
 
   __ leave();
 
   if (!is_critical_native) {
     // Any exception pending?
-    __ ld(t0, Address(xthread, in_bytes(Thread::pending_exception_offset())));
+    __ lw(t0, Address(xthread, in_bytes(Thread::pending_exception_offset())));
     __ bnez(t0, exception_pending);
   }
 
@@ -1940,7 +1940,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
 #ifdef ASSERT
     { Label L;
-      __ ld(t0, Address(xthread, in_bytes(Thread::pending_exception_offset())));
+      __ lw(t0, Address(xthread, in_bytes(Thread::pending_exception_offset())));
       __ beqz(t0, L);
       __ stop("no pending exception allowed on exit from monitorenter");
       __ bind(L);
@@ -1963,22 +1963,22 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
     // Save pending exception around call to VM (which contains an EXCEPTION_MARK)
     // NOTE that obj_reg == x9 currently
-    __ ld(x9, Address(xthread, in_bytes(Thread::pending_exception_offset())));
-    __ sd(zr, Address(xthread, in_bytes(Thread::pending_exception_offset())));
+    __ lw(x9, Address(xthread, in_bytes(Thread::pending_exception_offset())));
+    __ sw(zr, Address(xthread, in_bytes(Thread::pending_exception_offset())));
 
     rt_call(masm, CAST_FROM_FN_PTR(address, SharedRuntime::complete_monitor_unlocking_C), 3, 0, 1);
 
 #ifdef ASSERT
     {
       Label L;
-      __ ld(t0, Address(xthread, in_bytes(Thread::pending_exception_offset())));
+      __ lw(t0, Address(xthread, in_bytes(Thread::pending_exception_offset())));
       __ beqz(t0, L);
       __ stop("no pending exception allowed on exit complete_monitor_unlocking_C");
       __ bind(L);
     }
 #endif /* ASSERT */
 
-    __ sd(x9, Address(xthread, in_bytes(Thread::pending_exception_offset())));
+    __ sw(x9, Address(xthread, in_bytes(Thread::pending_exception_offset())));
 
     if (ret_type == T_FLOAT || ret_type == T_DOUBLE ) {
       restore_native_result(masm, ret_type, stack_slots);
@@ -2170,8 +2170,8 @@ void SharedRuntime::generate_deopt_blob() {
   // respectively.  Set them in TLS and fall thru to the
   // unpack_with_exception_in_tls entry point.
 
-  __ sd(x13, Address(xthread, JavaThread::exception_pc_offset()));
-  __ sd(x10, Address(xthread, JavaThread::exception_oop_offset()));
+  __ sw(x13, Address(xthread, JavaThread::exception_pc_offset()));
+  __ sw(x10, Address(xthread, JavaThread::exception_oop_offset()));
 
   int exception_in_tls_offset = __ pc() - start;
 
@@ -2203,18 +2203,18 @@ void SharedRuntime::generate_deopt_blob() {
   // load throwing pc from JavaThread and patch it as the return address
   // of the current frame. Then clear the field in JavaThread
 
-  __ ld(x13, Address(xthread, JavaThread::exception_pc_offset()));
-  __ sd(x13, Address(fp, wordSize));
-  __ sd(zr, Address(xthread, JavaThread::exception_pc_offset()));
+  __ lw(x13, Address(xthread, JavaThread::exception_pc_offset()));
+  __ sw(x13, Address(fp, wordSize));
+  __ sw(zr, Address(xthread, JavaThread::exception_pc_offset()));
 
 #ifdef ASSERT
   // verify that there is really an exception oop in JavaThread
-  __ ld(x10, Address(xthread, JavaThread::exception_oop_offset()));
+  __ lw(x10, Address(xthread, JavaThread::exception_oop_offset()));
   __ verify_oop(x10);
 
   // verify that there is no pending exception
   Label no_pending_exception;
-  __ ld(t0, Address(xthread, Thread::pending_exception_offset()));
+  __ lw(t0, Address(xthread, Thread::pending_exception_offset()));
   __ beqz(t0, no_pending_exception);
   __ stop("must not have pending exception here");
   __ bind(no_pending_exception);
@@ -2234,7 +2234,7 @@ void SharedRuntime::generate_deopt_blob() {
 #ifdef ASSERT
   {
     Label L;
-    __ ld(t0, Address(xthread,
+    __ lw(t0, Address(xthread,
                               JavaThread::last_Java_fp_offset()));
     __ beqz(t0, L);
     __ stop("SharedRuntime::generate_deopt_blob: last_Java_fp not cleared");
@@ -2257,19 +2257,19 @@ void SharedRuntime::generate_deopt_blob() {
   // Load UnrollBlock* into x15
   __ mv(x15, x10);
 
-  __ lwu(xcpool, Address(x15, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes()));
+  __ lw(xcpool, Address(x15, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes()));
   Label noException;
   __ li(t0, Deoptimization::Unpack_exception);
   __ bne(xcpool, t0, noException); // Was exception pending?
-  __ ld(x10, Address(xthread, JavaThread::exception_oop_offset()));
-  __ ld(x13, Address(xthread, JavaThread::exception_pc_offset()));
-  __ sd(zr, Address(xthread, JavaThread::exception_oop_offset()));
-  __ sd(zr, Address(xthread, JavaThread::exception_pc_offset()));
+  __ lw(x10, Address(xthread, JavaThread::exception_oop_offset()));
+  __ lw(x13, Address(xthread, JavaThread::exception_pc_offset()));
+  __ sw(zr, Address(xthread, JavaThread::exception_oop_offset()));
+  __ sw(zr, Address(xthread, JavaThread::exception_pc_offset()));
 
   __ verify_oop(x10);
 
   // Overwrite the result registers with the exception results.
-  __ sd(x10, Address(sp, RegisterSaver::x10_offset_in_bytes()));
+  __ sw(x10, Address(sp, RegisterSaver::x10_offset_in_bytes()));
 
   __ bind(noException);
 
@@ -2293,11 +2293,11 @@ void SharedRuntime::generate_deopt_blob() {
   // when we are done the return to frame 3 will still be on the stack.
 
   // Pop deoptimized frame
-  __ lwu(x12, Address(x15, Deoptimization::UnrollBlock::size_of_deoptimized_frame_offset_in_bytes()));
+  __ lw(x12, Address(x15, Deoptimization::UnrollBlock::size_of_deoptimized_frame_offset_in_bytes()));
   __ sub(x12, x12, 2 * wordSize);
   __ add(sp, sp, x12);
-  __ ld(fp, Address(sp, 0));
-  __ ld(lr, Address(sp, wordSize));
+  __ lw(fp, Address(sp, 0));
+  __ lw(lr, Address(sp, wordSize));
   __ addi(sp, sp, 2 * wordSize);
   // LR should now be the return address to the caller (3)
 
@@ -2306,18 +2306,18 @@ void SharedRuntime::generate_deopt_blob() {
   // interpreter would need. So this stack banging should never
   // trigger a fault. Verify that it does not on non product builds.
   if (UseStackBanging) {
-    __ lwu(x9, Address(x15, Deoptimization::UnrollBlock::total_frame_sizes_offset_in_bytes()));
+    __ lw(x9, Address(x15, Deoptimization::UnrollBlock::total_frame_sizes_offset_in_bytes()));
     __ bang_stack_size(x9, x12);
   }
 #endif
   // Load address of array of frame pcs into x12
-  __ ld(x12, Address(x15, Deoptimization::UnrollBlock::frame_pcs_offset_in_bytes()));
+  __ lw(x12, Address(x15, Deoptimization::UnrollBlock::frame_pcs_offset_in_bytes()));
 
   // Load address of array of frame sizes into x14
-  __ ld(x14, Address(x15, Deoptimization::UnrollBlock::frame_sizes_offset_in_bytes()));
+  __ lw(x14, Address(x15, Deoptimization::UnrollBlock::frame_sizes_offset_in_bytes()));
 
   // Load counter into x13
-  __ lwu(x13, Address(x15, Deoptimization::UnrollBlock::number_of_frames_offset_in_bytes()));
+  __ lw(x13, Address(x15, Deoptimization::UnrollBlock::number_of_frames_offset_in_bytes()));
 
   // Now adjust the caller's stack to make up for the extra locals
   // but record the original sp so that we can save it in the skeletal interpreter
@@ -2327,7 +2327,7 @@ void SharedRuntime::generate_deopt_blob() {
   const Register sender_sp = x16;
 
   __ mv(sender_sp, sp);
-  __ lwu(x9, Address(x15,
+  __ lw(x9, Address(x15,
                      Deoptimization::UnrollBlock::
                      caller_adjustment_offset_in_bytes()));
   __ sub(sp, sp, x9);
@@ -2337,22 +2337,22 @@ void SharedRuntime::generate_deopt_blob() {
   __ mv(t1, t0);
   Label loop;
   __ bind(loop);
-  __ ld(x9, Address(x14, 0));          // Load frame size
+  __ lw(x9, Address(x14, 0));          // Load frame size
   __ addi(x14, x14, wordSize);
   __ sub(x9, x9, 2 * wordSize);        // We'll push pc and fp by hand
-  __ ld(lr, Address(x12, 0));          // Load pc
+  __ lw(lr, Address(x12, 0));          // Load pc
   __ addi(x12, x12, wordSize);
   __ enter();                          // Save old & set new fp
   __ sub(sp, sp, x9);                  // Prolog
   // This value is corrected by layout_activation_impl
-  __ sd(zr, Address(fp, frame::interpreter_frame_last_sp_offset * wordSize));
-  __ sd(sender_sp, Address(fp, frame::interpreter_frame_sender_sp_offset * wordSize)); // Make it walkable
+  __ sw(zr, Address(fp, frame::interpreter_frame_last_sp_offset * wordSize));
+  __ sw(sender_sp, Address(fp, frame::interpreter_frame_sender_sp_offset * wordSize)); // Make it walkable
   __ mv(sender_sp, sp);                // Pass sender_sp to next frame
   __ addi(x13, x13, -1);               // Decrement counter
   __ bnez(x13, loop);
 
     // Re-push self-frame
-  __ ld(lr, Address(x12));
+  __ lw(lr, Address(x12));
   __ enter();
 
   // Allocate a full sized register save area.  We subtract 2 because
@@ -2361,7 +2361,7 @@ void SharedRuntime::generate_deopt_blob() {
 
   // Restore frame locals after moving the frame
   __ fsd(f10, Address(sp, RegisterSaver::f10_offset_in_bytes()));
-  __ sd(x10, Address(sp, RegisterSaver::x10_offset_in_bytes()));
+  __ sw(x10, Address(sp, RegisterSaver::x10_offset_in_bytes()));
 
   // Call C code.  Need thread but NOT official VM entry
   // crud.  We cannot block on this call, no GC can happen.  Call should
@@ -2390,7 +2390,7 @@ void SharedRuntime::generate_deopt_blob() {
 
   // Collect return values
   __ fld(f10, Address(sp, RegisterSaver::f10_offset_in_bytes()));
-  __ ld(x10, Address(sp, RegisterSaver::x10_offset_in_bytes()));
+  __ lw(x10, Address(sp, RegisterSaver::x10_offset_in_bytes()));
 
   // Pop self-frame.
   __ leave();                           // Epilog
@@ -2428,15 +2428,15 @@ void SharedRuntime::generate_uncommon_trap_blob() {
   // and sp should be 16 byte aligned
   // push fp and retaddr by hand
   __ addi(sp, sp, -2 * wordSize);
-  __ sd(lr, Address(sp, wordSize));
-  __ sd(fp, Address(sp, 0));
+  __ sw(lr, Address(sp, wordSize));
+  __ sw(fp, Address(sp, 0));
   // we don't expect an arg reg save area
 #ifndef PRODUCT
   assert(frame::arg_reg_save_area_bytes == 0, "not expecting frame reg save area");
 #endif
   // compiler left unloaded_class_index in j_rarg0 move to where the
   // runtime expects it.
-  __ addiw(c_rarg1, j_rarg0, 0);
+  __ addi(c_rarg1, j_rarg0, 0);
 
   // we need to set the past SP to the stack pointer of the stub frame
   // and the pc to the address where this runtime call will return
@@ -2477,7 +2477,7 @@ void SharedRuntime::generate_uncommon_trap_blob() {
 
 #ifdef ASSERT
   { Label L;
-    __ lwu(t0, Address(x14, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes()));
+    __ lw(t0, Address(x14, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes()));
     __ mvw(t1, Deoptimization::Unpack_uncommon_trap);
     __ beq(t0, t1, L);
     __ stop("SharedRuntime::generate_deopt_blob: last_Java_fp not cleared");
@@ -2495,13 +2495,13 @@ void SharedRuntime::generate_uncommon_trap_blob() {
   __ add(sp, sp, (SimpleRuntimeFrame::framesize) << LogBytesPerInt); // Epilog!
 
   // Pop deoptimized frame (int)
-  __ lwu(x12, Address(x14,
+  __ lw(x12, Address(x14,
                       Deoptimization::UnrollBlock::
                       size_of_deoptimized_frame_offset_in_bytes()));
   __ sub(x12, x12, 2 * wordSize);
   __ add(sp, sp, x12);
-  __ ld(fp, sp, 0);
-  __ ld(lr, sp, wordSize);
+  __ lw(fp, sp, 0);
+  __ lw(lr, sp, wordSize);
   __ addi(sp, sp, 2 * wordSize);
   // LR should now be the return address to the caller (3) frame
 
@@ -2510,7 +2510,7 @@ void SharedRuntime::generate_uncommon_trap_blob() {
   // interpreter would need. So this stack banging should never
   // trigger a fault. Verify that it does not on non product builds.
   if (UseStackBanging) {
-    __ lwu(x11, Address(x14,
+    __ lw(x11, Address(x14,
                         Deoptimization::UnrollBlock::
                         total_frame_sizes_offset_in_bytes()));
     __ bang_stack_size(x11, x12);
@@ -2518,16 +2518,16 @@ void SharedRuntime::generate_uncommon_trap_blob() {
 #endif
 
   // Load address of array of frame pcs into x12 (address*)
-  __ ld(x12, Address(x14,
+  __ lw(x12, Address(x14,
                      Deoptimization::UnrollBlock::frame_pcs_offset_in_bytes()));
 
   // Load address of array of frame sizes into x15 (intptr_t*)
-  __ ld(x15, Address(x14,
+  __ lw(x15, Address(x14,
                      Deoptimization::UnrollBlock::
                      frame_sizes_offset_in_bytes()));
 
   // Counter
-  __ lwu(x13, Address(x14,
+  __ lw(x13, Address(x14,
                       Deoptimization::UnrollBlock::
                       number_of_frames_offset_in_bytes())); // (int)
 
@@ -2538,7 +2538,7 @@ void SharedRuntime::generate_uncommon_trap_blob() {
 
   const Register sender_sp = t1; // temporary register
 
-  __ lwu(x11, Address(x14,
+  __ lw(x11, Address(x14,
                       Deoptimization::UnrollBlock::
                       caller_adjustment_offset_in_bytes())); // (int)
   __ mv(sender_sp, sp);
@@ -2547,20 +2547,20 @@ void SharedRuntime::generate_uncommon_trap_blob() {
   // Push interpreter frames in a loop
   Label loop;
   __ bind(loop);
-  __ ld(x11, Address(x15, 0));       // Load frame size
+  __ lw(x11, Address(x15, 0));       // Load frame size
   __ sub(x11, x11, 2 * wordSize);    // We'll push pc and fp by hand
-  __ ld(lr, Address(x12, 0));        // Save return address
+  __ lw(lr, Address(x12, 0));        // Save return address
   __ enter();                        // and old fp & set new fp
   __ sub(sp, sp, x11);               // Prolog
-  __ sd(sender_sp, Address(fp, frame::interpreter_frame_sender_sp_offset * wordSize)); // Make it walkable
+  __ sw(sender_sp, Address(fp, frame::interpreter_frame_sender_sp_offset * wordSize)); // Make it walkable
   // This value is corrected by layout_activation_impl
-  __ sd(zr, Address(fp, frame::interpreter_frame_last_sp_offset * wordSize));
+  __ sw(zr, Address(fp, frame::interpreter_frame_last_sp_offset * wordSize));
   __ mv(sender_sp, sp);              // Pass sender_sp to next frame
   __ add(x15, x15, wordSize);        // Bump array pointer (sizes)
   __ add(x12, x12, wordSize);        // Bump array pointer (pcs)
-  __ subw(x13, x13, 1);              // Decrement counter
+  __ sub(x13, x13, 1);              // Decrement counter
   __ bgtz(x13, loop);
-  __ ld(lr, Address(x12, 0));        // save final return address
+  __ lw(lr, Address(x12, 0));        // save final return address
   // Re-push self-frame
   __ enter();                        // & old fp & set new fp
 
@@ -2646,8 +2646,8 @@ SafepointBlob* SharedRuntime::generate_handler_blob(address call_ptr, int poll_t
     // Additionally, x18 is a callee-saved register so we can look at
     // it later to determine if someone changed the return address for
     // us!
-    __ ld(x18, Address(xthread, JavaThread::saved_exception_pc_offset()));
-    __ sd(x18, Address(fp, wordSize));
+    __ lw(x18, Address(xthread, JavaThread::saved_exception_pc_offset()));
+    __ sw(x18, Address(fp, wordSize));
   }
 
   // Do the call
@@ -2671,7 +2671,7 @@ SafepointBlob* SharedRuntime::generate_handler_blob(address call_ptr, int poll_t
   __ fence_i();
   __ membar(MacroAssembler::LoadLoad | MacroAssembler::LoadStore);
 
-  __ ld(t0, Address(xthread, Thread::pending_exception_offset()));
+  __ lw(t0, Address(xthread, Thread::pending_exception_offset()));
   __ beqz(t0, noException);
 
   // Exception pending
@@ -2686,13 +2686,13 @@ SafepointBlob* SharedRuntime::generate_handler_blob(address call_ptr, int poll_t
   Label no_adjust, bail;
   if (SafepointMechanism::uses_thread_local_poll() && !cause_return) {
     // If our stashed return pc was modified by the runtime we avoid touching it
-    __ ld(t0, Address(fp, wordSize));
+    __ lw(t0, Address(fp, wordSize));
     __ bne(x18, t0, no_adjust);
 
 #ifdef ASSERT
     // Verify the correct encoding of the poll we're about to skip.
     // See NativeInstruction::is_lwu_to_zr()
-    __ lwu(t0, Address(x18));
+    __ lw(t0, Address(x18));
     __ andi(t1, t0, 0b0000011);
     __ mv(t2, 0b0000011);
     __ bne(t1, t2, bail); // 0-6:0b0000011
@@ -2706,7 +2706,7 @@ SafepointBlob* SharedRuntime::generate_handler_blob(address call_ptr, int poll_t
 #endif
     // Adjust return pc forward to step over the safepoint poll instruction
     __ add(x18, x18, NativeInstruction::instruction_size);
-    __ sd(x18, Address(fp, wordSize));
+    __ sw(x18, Address(fp, wordSize));
   }
 
   __ bind(no_adjust);
@@ -2782,15 +2782,15 @@ RuntimeStub* SharedRuntime::generate_resolve_blob(address destination, const cha
   __ reset_last_Java_frame(false);
   // check for pending exceptions
   Label pending;
-  __ ld(t0, Address(xthread, Thread::pending_exception_offset()));
+  __ lw(t0, Address(xthread, Thread::pending_exception_offset()));
   __ bnez(t0, pending);
 
   // get the returned Method*
   __ get_vm_result_2(xmethod, xthread);
-  __ sd(xmethod, Address(sp, RegisterSaver::reg_offset_in_bytes(xmethod)));
+  __ sw(xmethod, Address(sp, RegisterSaver::reg_offset_in_bytes(xmethod)));
 
   // x10 is where we want to jump, overwrite t0 which is saved and temporary
-  __ sd(x10, Address(sp, RegisterSaver::tmp0_offset_in_bytes()));
+  __ sw(x10, Address(sp, RegisterSaver::tmp0_offset_in_bytes()));
   RegisterSaver::restore_live_registers(masm);
 
   // We are back the the original state on entry and ready to go.
@@ -2805,9 +2805,9 @@ RuntimeStub* SharedRuntime::generate_resolve_blob(address destination, const cha
 
   // exception pending => remove activation and forward to exception handler
 
-  __ sd(zr, Address(xthread, JavaThread::vm_result_offset()));
+  __ sw(zr, Address(xthread, JavaThread::vm_result_offset()));
 
-  __ ld(x10, Address(xthread, Thread::pending_exception_offset()));
+  __ lw(x10, Address(xthread, Thread::pending_exception_offset()));
   __ far_jump(RuntimeAddress(StubRoutines::forward_exception_entry()));
 
   // -------------
@@ -2870,8 +2870,8 @@ void OptoRuntime::generate_exception_blob() {
   // push fp and retaddr by hand
   // Exception pc is 'return address' for stack walker
   __ addi(sp, sp, -2 * wordSize);
-  __ sd(lr, Address(sp, wordSize));
-  __ sd(fp, Address(sp));
+  __ sw(lr, Address(sp, wordSize));
+  __ sw(fp, Address(sp));
   // there are no callee save registers and we don't expect an
   // arg reg save area
 #ifndef PRODUCT
@@ -2880,8 +2880,8 @@ void OptoRuntime::generate_exception_blob() {
   // Store exception in Thread object. We cannot pass any arguments to the
   // handle_exception call, since we do not want to make any assumption
   // about the size of the frame where the exception happened in.
-  __ sd(x10, Address(xthread, JavaThread::exception_oop_offset()));
-  __ sd(x13, Address(xthread, JavaThread::exception_pc_offset()));
+  __ sw(x10, Address(xthread, JavaThread::exception_oop_offset()));
+  __ sw(x13, Address(xthread, JavaThread::exception_pc_offset()));
 
   // This call does all the hard work.  It checks if an exception handler
   // exists in the method.
@@ -2922,8 +2922,8 @@ void OptoRuntime::generate_exception_blob() {
   // convention will save restore it in prolog/epilog) Other than that
   // there are no callee save registers now that adapter frames are gone.
   // and we dont' expect an arg reg save area
-  __ ld(fp, Address(sp));
-  __ ld(x13, Address(sp, wordSize));
+  __ lw(fp, Address(sp));
+  __ lw(x13, Address(sp, wordSize));
   __ addi(sp, sp , 2 * wordSize);
 
   // x10: exception handler
@@ -2932,15 +2932,15 @@ void OptoRuntime::generate_exception_blob() {
   __ mv(t0, x10);
 
   // Get the exception oop
-  __ ld(x10, Address(xthread, JavaThread::exception_oop_offset()));
+  __ lw(x10, Address(xthread, JavaThread::exception_oop_offset()));
   // Get the exception pc in case we are deoptimized
-  __ ld(x14, Address(xthread, JavaThread::exception_pc_offset()));
+  __ lw(x14, Address(xthread, JavaThread::exception_pc_offset()));
 #ifdef ASSERT
-  __ sd(zr, Address(xthread, JavaThread::exception_handler_pc_offset()));
-  __ sd(zr, Address(xthread, JavaThread::exception_pc_offset()));
+  __ sw(zr, Address(xthread, JavaThread::exception_handler_pc_offset()));
+  __ sw(zr, Address(xthread, JavaThread::exception_pc_offset()));
 #endif
   // Clear the exception oop so GC no longer processes it as a root.
-  __ sd(zr, Address(xthread, JavaThread::exception_oop_offset()));
+  __ sw(zr, Address(xthread, JavaThread::exception_oop_offset()));
 
   // x10: exception oop
   // t0:  exception handler

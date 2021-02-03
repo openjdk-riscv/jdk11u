@@ -54,7 +54,7 @@ void InlineCacheBuffer::assemble_ic_buffer_code(address code_begin, void* cached
 
   address start = __ pc();
   Label l;
-  __ ld(t1, l);
+  __ lw(t1, l);
   __ far_jump(ExternalAddress(entry_point));
   __ align(wordSize);
   __ bind(l);

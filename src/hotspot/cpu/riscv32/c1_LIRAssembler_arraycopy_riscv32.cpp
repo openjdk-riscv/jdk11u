@@ -69,9 +69,9 @@ void LIR_Assembler::generic_arraycopy(Register src, Register src_pos, Register l
   // x10 is -1^K where K == partial copied count
   __ xori(t0, x10, -1);
   // adjust length down and src/end pos up by partial copied count
-  __ subw(length, length, t0);
-  __ addw(src_pos, src_pos, t0);
-  __ addw(dst_pos, dst_pos, t0);
+  __ sub(length, length, t0);
+  __ add(src_pos, src_pos, t0);
+  __ add(dst_pos, dst_pos, t0);
   __ j(*stub->entry());
 
   __ bind(*stub->continuation());
@@ -119,13 +119,13 @@ void LIR_Assembler::arraycopy_simple_check(Register src, Register src_pos, Regis
   }
 
   if (flags & LIR_OpArrayCopy::src_range_check) {
-    __ addw(tmp, src_pos, length);
-    __ lwu(t0, Address(src, arrayOopDesc::length_offset_in_bytes()));
+    __ add(tmp, src_pos, length);
+    __ lw(t0, Address(src, arrayOopDesc::length_offset_in_bytes()));
     __ bgtu(tmp, t0, *stub->entry(), /* is_far */ true);
   }
   if (flags & LIR_OpArrayCopy::dst_range_check) {
-    __ addw(tmp, dst_pos, length);
-    __ lwu(t0, Address(dst, arrayOopDesc::length_offset_in_bytes()));
+    __ add(tmp, dst_pos, length);
+    __ lw(t0, Address(dst, arrayOopDesc::length_offset_in_bytes()));
     __ bgtu(tmp, t0, *stub->entry(), /* is_far */ true);
   }
 }
@@ -185,9 +185,9 @@ void LIR_Assembler::arraycopy_checkcast(Register src, Register src_pos, Register
   // return value is -1^K where K is partial copied count
   __ xori(t0, x10, -1);
   // adjust length down and src/end pos up by partial copied count
-  __ subw(length, length, t0);
-  __ addw(src_pos, src_pos, t0);
-  __ addw(dst_pos, dst_pos, t0);
+  __ sub(length, length, t0);
+  __ add(src_pos, src_pos, t0);
+  __ add(dst_pos, dst_pos, t0);
 }
 
 void LIR_Assembler::arraycopy_type_check(Register src, Register src_pos, Register length,
@@ -197,11 +197,11 @@ void LIR_Assembler::arraycopy_type_check(Register src, Register src_pos, Registe
   if (basic_type != T_OBJECT) {
     // Simple test for basic type arrays
     if (UseCompressedClassPointers) {
-      __ lwu(tmp, Address(src, oopDesc::klass_offset_in_bytes()));
-      __ lwu(t0, Address(dst, oopDesc::klass_offset_in_bytes()));
+      __ lw(tmp, Address(src, oopDesc::klass_offset_in_bytes()));
+      __ lw(t0, Address(dst, oopDesc::klass_offset_in_bytes()));
     } else {
-      __ ld(tmp, Address(src, oopDesc::klass_offset_in_bytes()));
-      __ ld(t0, Address(dst, oopDesc::klass_offset_in_bytes()));
+      __ lw(tmp, Address(src, oopDesc::klass_offset_in_bytes()));
+      __ lw(t0, Address(dst, oopDesc::klass_offset_in_bytes()));
     }
     __ bne(tmp, t0, *stub->entry(), /* is_far */ true);
   } else {
@@ -211,12 +211,12 @@ void LIR_Assembler::arraycopy_type_check(Register src, Register src_pos, Registe
 
 #define PUSH(r1, r2)                                     \
     __ addi(sp, sp, -2 * wordSize);                      \
-    __ sd(r1, Address(sp, 1 * wordSize));                \
-    __ sd(r2, Address(sp, 0));
+    __ sw(r1, Address(sp, 1 * wordSize));                \
+    __ sw(r2, Address(sp, 0));
 
 #define POP(r1, r2)                                      \
-    __ ld(r1, Address(sp, 1 * wordSize));                \
-    __ ld(r2, Address(sp, 0));                           \
+    __ lw(r1, Address(sp, 1 * wordSize));                \
+    __ lw(r2, Address(sp, 0));                           \
     __ addi(sp, sp, 2 * wordSize);
 
     PUSH(src, dst);
@@ -262,22 +262,22 @@ void LIR_Assembler::arraycopy_assert(Register src, Register dst, Register tmp, c
 
     if (basic_type != T_OBJECT) {
       if (UseCompressedClassPointers) {
-        __ lwu(t0, Address(dst, oopDesc::klass_offset_in_bytes()));
+        __ lw(t0, Address(dst, oopDesc::klass_offset_in_bytes()));
       } else {
-        __ ld(t0, Address(dst, oopDesc::klass_offset_in_bytes()));
+        __ lw(t0, Address(dst, oopDesc::klass_offset_in_bytes()));
       }
       __ bne(tmp, t0, halt);
       if (UseCompressedClassPointers) {
-        __ lwu(t0, Address(src, oopDesc::klass_offset_in_bytes()));
+        __ lw(t0, Address(src, oopDesc::klass_offset_in_bytes()));
       } else {
-        __ ld(t0, Address(src, oopDesc::klass_offset_in_bytes()));
+        __ lw(t0, Address(src, oopDesc::klass_offset_in_bytes()));
       }
       __ beq(tmp, t0, known_ok);
     } else {
       if (UseCompressedClassPointers) {
-        __ lwu(t0, Address(dst, oopDesc::klass_offset_in_bytes()));
+        __ lw(t0, Address(dst, oopDesc::klass_offset_in_bytes()));
       } else {
-        __ ld(t0, Address(dst, oopDesc::klass_offset_in_bytes()));
+        __ lw(t0, Address(dst, oopDesc::klass_offset_in_bytes()));
       }
       __ beq(tmp, t0, known_ok);
       __ beq(src, dst, known_ok);
@@ -364,26 +364,26 @@ void LIR_Assembler::arraycopy_checkcast_prepare_params(Register src, Register sr
                                         Register dst, Register dst_pos, BasicType basic_type) {
   arraycopy_prepare_params(src, src_pos, length, dst, dst_pos, basic_type);
   __ load_klass(c_rarg4, dst);
-  __ ld(c_rarg4, Address(c_rarg4, ObjArrayKlass::element_klass_offset()));
-  __ lwu(c_rarg3, Address(c_rarg4, Klass::super_check_offset_offset()));
+  __ lw(c_rarg4, Address(c_rarg4, ObjArrayKlass::element_klass_offset()));
+  __ lw(c_rarg3, Address(c_rarg4, Klass::super_check_offset_offset()));
 }
 
 void LIR_Assembler::arraycopy_store_args(Register src, Register src_pos, Register length,
                                          Register dst, Register dst_pos) {
-  __ sd(dst_pos, Address(sp, 0));                // 0: dst_pos sp offset
-  __ sd(dst, Address(sp, 1 * BytesPerWord));     // 1: dst sp offset
-  __ sd(length, Address(sp, 2 * BytesPerWord));  // 2: length sp offset
-  __ sd(src_pos, Address(sp, 3 * BytesPerWord)); // 3: src_pos sp offset
-  __ sd(src, Address(sp, 4 * BytesPerWord));     // 4: src sp offset
+  __ sw(dst_pos, Address(sp, 0));                // 0: dst_pos sp offset
+  __ sw(dst, Address(sp, 1 * BytesPerWord));     // 1: dst sp offset
+  __ sw(length, Address(sp, 2 * BytesPerWord));  // 2: length sp offset
+  __ sw(src_pos, Address(sp, 3 * BytesPerWord)); // 3: src_pos sp offset
+  __ sw(src, Address(sp, 4 * BytesPerWord));     // 4: src sp offset
 }
 
 void LIR_Assembler::arraycopy_load_args(Register src, Register src_pos, Register length,
                                         Register dst, Register dst_pos) {
-  __ ld(dst_pos, Address(sp, 0));                // 0: dst_pos sp offset
-  __ ld(dst, Address(sp, 1 * BytesPerWord));     // 1: dst sp offset
-  __ ld(length, Address(sp, 2 * BytesPerWord));  // 2: length sp offset
-  __ ld(src_pos, Address(sp, 3 * BytesPerWord)); // 3: src_pos sp offset
-  __ ld(src, Address(sp, 4 * BytesPerWord));     // 4: src sp offset
+  __ lw(dst_pos, Address(sp, 0));                // 0: dst_pos sp offset
+  __ lw(dst, Address(sp, 1 * BytesPerWord));     // 1: dst sp offset
+  __ lw(length, Address(sp, 2 * BytesPerWord));  // 2: length sp offset
+  __ lw(src_pos, Address(sp, 3 * BytesPerWord)); // 3: src_pos sp offset
+  __ lw(src, Address(sp, 4 * BytesPerWord));     // 4: src sp offset
 }
 
 #undef __

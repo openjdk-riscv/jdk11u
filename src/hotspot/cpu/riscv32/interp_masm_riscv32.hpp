@@ -67,46 +67,55 @@ class InterpreterMacroAssembler: public MacroAssembler {
 
   // Interpreter-specific registers
   void save_bcp() {
-    sd(xbcp, Address(fp, frame::interpreter_frame_bcp_offset * wordSize));
+    // sd(xbcp, Address(fp, frame::interpreter_frame_bcp_offset * wordSize));
+    sw(xbcp, Address(fp, frame::interpreter_frame_bcp_offset * wordSize));
   }
 
   void restore_bcp() {
-    ld(xbcp, Address(fp, frame::interpreter_frame_bcp_offset * wordSize));
+    // ld(xbcp, Address(fp, frame::interpreter_frame_bcp_offset * wordSize));
+    lw(xbcp, Address(fp, frame::interpreter_frame_bcp_offset * wordSize));
   }
 
   void restore_locals() {
-    ld(xlocals, Address(fp, frame::interpreter_frame_locals_offset * wordSize));
+    // ld(xlocals, Address(fp, frame::interpreter_frame_locals_offset * wordSize));
+    lw(xlocals, Address(fp, frame::interpreter_frame_locals_offset * wordSize));
   }
 
   void restore_constant_pool_cache() {
-    ld(xcpool, Address(fp, frame::interpreter_frame_cache_offset * wordSize));
+    // ld(xcpool, Address(fp, frame::interpreter_frame_cache_offset * wordSize));
+    lw(xcpool, Address(fp, frame::interpreter_frame_cache_offset * wordSize));
   }
 
   void get_dispatch();
 
   // Helpers for runtime call arguments/results
   void get_method(Register reg) {
-    ld(reg, Address(fp, frame::interpreter_frame_method_offset * wordSize));
+    // ld(reg, Address(fp, frame::interpreter_frame_method_offset * wordSize));
+    lw(reg, Address(fp, frame::interpreter_frame_method_offset * wordSize));
   }
 
   void get_const(Register reg) {
     get_method(reg);
-    ld(reg, Address(reg, in_bytes(Method::const_offset())));
+    // ld(reg, Address(reg, in_bytes(Method::const_offset())));
+    lw(reg, Address(reg, in_bytes(Method::const_offset())));
   }
 
   void get_constant_pool(Register reg) {
     get_const(reg);
-    ld(reg, Address(reg, in_bytes(ConstMethod::constants_offset())));
+    // ld(reg, Address(reg, in_bytes(ConstMethod::constants_offset())));
+    lw(reg, Address(reg, in_bytes(ConstMethod::constants_offset())));
   }
 
   void get_constant_pool_cache(Register reg) {
     get_constant_pool(reg);
-    ld(reg, Address(reg, ConstantPool::cache_offset_in_bytes()));
+    // ld(reg, Address(reg, ConstantPool::cache_offset_in_bytes()));
+    lw(reg, Address(reg, ConstantPool::cache_offset_in_bytes()));
   }
 
   void get_cpool_and_tags(Register cpool, Register tags) {
     get_constant_pool(cpool);
-    ld(tags, Address(cpool, ConstantPool::tags_offset_in_bytes()));
+    // ld(tags, Address(cpool, ConstantPool::tags_offset_in_bytes()));
+    lw(tags, Address(cpool, ConstantPool::tags_offset_in_bytes()));
   }
 
   void get_unsigned_2_byte_index_at_bcp(Register reg, int bcp_offset);
@@ -137,9 +146,11 @@ class InterpreterMacroAssembler: public MacroAssembler {
   void push(TosState state); // transition state -> vtos
 
   void empty_expression_stack() {
-    ld(esp, Address(fp, frame::interpreter_frame_monitor_block_top_offset * wordSize));
+    // ld(esp, Address(fp, frame::interpreter_frame_monitor_block_top_offset * wordSize));
+    lw(esp, Address(fp, frame::interpreter_frame_monitor_block_top_offset * wordSize));
     // NULL last_sp until next java call
-    sd(zr, Address(fp, frame::interpreter_frame_last_sp_offset * wordSize));
+    // sd(zr, Address(fp, frame::interpreter_frame_last_sp_offset * wordSize));
+    sw(zr, Address(fp, frame::interpreter_frame_last_sp_offset * wordSize));
   }
 
   // Helpers for swap and dup

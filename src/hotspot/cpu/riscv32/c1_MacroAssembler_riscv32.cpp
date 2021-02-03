@@ -59,7 +59,7 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   verify_oop(obj);
 
   // save object being locked into the BasicObjectLock
-  sd(obj, Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()));
+  sw(obj, Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()));
 
   if (UseBiasedLocking) {
     assert(tmp != noreg, "should have tmp register at this point");
@@ -69,11 +69,11 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   }
 
   // Load object header
-  ld(hdr, Address(obj, hdr_offset));
+  lw(hdr, Address(obj, hdr_offset));
   // and mark it as unlocked
   ori(hdr, hdr, markOopDesc::unlocked_value);
   // save unlocked object header into the displaced header location on the stack
-  sd(hdr, Address(disp_hdr, 0));
+  sw(hdr, Address(disp_hdr, 0));
   // test if object header is still the same (i.e. unlocked), and if so, store the
   // displaced header address in the object header - if it is not the same, get the
   // object header instead
@@ -98,7 +98,7 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   andr(hdr, hdr, t0);
   // for recursive locking, the result is zero => save it in the displaced header
   // location (NULL in the displaced hdr location indicates recursive locking)
-  sd(hdr, Address(disp_hdr, 0));
+  sw(hdr, Address(disp_hdr, 0));
   // otherwise we don't care about the result and handle locking via runtime call
   bnez(hdr, slow_case, /* is_far */ true);
   bind(done);
@@ -117,18 +117,18 @@ void C1_MacroAssembler::unlock_object(Register hdr, Register obj, Register disp_
 
   if (UseBiasedLocking) {
     // load object
-    ld(obj, Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()));
+    lw(obj, Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()));
     biased_locking_exit(obj, hdr, done);
   }
 
   // load displaced header
-  ld(hdr, Address(disp_hdr, 0));
+  lw(hdr, Address(disp_hdr, 0));
   // if the loaded hdr is NULL we had recursive locking
   // if we had recursive locking, we are done
   beqz(hdr, done);
   if (!UseBiasedLocking) {
     // load object
-    ld(obj, Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()));
+    lw(obj, Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()));
   }
   verify_oop(obj);
   // test if object header is pointing to the displaced header, and if so, restore
@@ -158,18 +158,18 @@ void C1_MacroAssembler::initialize_header(Register obj, Register klass, Register
   assert_different_registers(obj, klass, len);
   if (UseBiasedLocking && !len->is_valid()) {
     assert_different_registers(obj, klass, len, tmp1, tmp2);
-    ld(tmp1, Address(klass, Klass::prototype_header_offset()));
+    lw(tmp1, Address(klass, Klass::prototype_header_offset()));
   } else {
     // This assumes that all prototype bits fitr in an int32_t
     mv(tmp1, (int32_t)(intptr_t)markOopDesc::prototype());
   }
-  sd(tmp1, Address(obj, oopDesc::mark_offset_in_bytes()));
+  sw(tmp1, Address(obj, oopDesc::mark_offset_in_bytes()));
 
   if (UseCompressedClassPointers) { // Take care not to kill klass
     encode_klass_not_null(tmp1, klass);
     sw(tmp1, Address(obj, oopDesc::klass_offset_in_bytes()));
   } else {
-    sd(klass, Address(obj, oopDesc::klass_offset_in_bytes()));
+    sw(klass, Address(obj, oopDesc::klass_offset_in_bytes()));
   }
 
   if (len->is_valid()) {
@@ -228,11 +228,11 @@ void C1_MacroAssembler::initialize_object(Register obj, Register klass, Register
       // use explicit null stores
       int i = hdr_size_in_bytes;
       if (i < con_size_in_bytes && (con_size_in_bytes % (2 * BytesPerWord))) { // 2: multipler for BytesPerWord
-        sd(zr, Address(obj, i));
+        sw(zr, Address(obj, i));
         i += BytesPerWord;
       }
       for (; i < con_size_in_bytes; i += BytesPerWord) {
-        sd(zr, Address(obj, i));
+        sw(zr, Address(obj, i));
       }
     } else if (con_size_in_bytes > hdr_size_in_bytes) {
       block_comment("zero memory");
@@ -253,7 +253,7 @@ void C1_MacroAssembler::initialize_object(Register obj, Register klass, Register
         if (-i == remainder) {
           bind(entry_point);
         }
-        sd(zr, Address(t0, i * wordSize));
+        sw(zr, Address(t0, i * wordSize));
       }
       if (remainder == 0) {
         bind(entry_point);
@@ -343,7 +343,7 @@ void C1_MacroAssembler::load_parameter(int offset_in_words, Register reg) {
   //     + 2: argument with offset 0
   //     + 3: argument with offset 1
   //     + 4: ...
-  ld(reg, Address(fp, (offset_in_words + 2) * BytesPerWord));
+  lw(reg, Address(fp, (offset_in_words + 2) * BytesPerWord));
 }
 
 #ifndef PRODUCT

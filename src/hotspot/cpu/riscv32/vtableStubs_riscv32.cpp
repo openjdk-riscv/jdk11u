@@ -120,7 +120,7 @@ VtableStub* VtableStubs::create_vtable_stub(int vtable_index) {
   if (DebugVtables) {
     Label L;
     __ beqz(xmethod, L);
-    __ ld(t0, Address(xmethod, Method::from_compiled_offset()));
+    __ lw(t0, Address(xmethod, Method::from_compiled_offset()));
     __ bnez(t0, L);
     __ stop("Vtable entry is NULL");
     __ bind(L);
@@ -131,7 +131,7 @@ VtableStub* VtableStubs::create_vtable_stub(int vtable_index) {
   // xmethod: Method*
   // x12: receiver
   address ame_addr = __ pc();
-  __ ld(t0, Address(xmethod, Method::from_compiled_offset()));
+  __ lw(t0, Address(xmethod, Method::from_compiled_offset()));
   __ jr(t0);
 
   masm->flush();
@@ -183,8 +183,8 @@ VtableStub* VtableStubs::create_itable_stub(int itable_index) {
 
   Label L_no_such_interface;
 
-  __ ld(resolved_klass_reg, Address(icholder_reg, CompiledICHolder::holder_klass_offset()));
-  __ ld(holder_klass_reg,   Address(icholder_reg, CompiledICHolder::holder_metadata_offset()));
+  __ lw(resolved_klass_reg, Address(icholder_reg, CompiledICHolder::holder_klass_offset()));
+  __ lw(holder_klass_reg,   Address(icholder_reg, CompiledICHolder::holder_metadata_offset()));
 
   start_pc = __ pc();
 
@@ -225,7 +225,7 @@ VtableStub* VtableStubs::create_itable_stub(int itable_index) {
   if (DebugVtables) {
     Label L2;
     __ beqz(xmethod, L2);
-    __ ld(t0, Address(xmethod, Method::from_compiled_offset()));
+    __ lw(t0, Address(xmethod, Method::from_compiled_offset()));
     __ bnez(t0, L2);
     __ stop("compiler entrypoint is null");
     __ bind(L2);
@@ -235,7 +235,7 @@ VtableStub* VtableStubs::create_itable_stub(int itable_index) {
   // xmethod: Method*
   // j_rarg0: receiver
   address ame_addr = __ pc();
-  __ ld(t0, Address(xmethod, Method::from_compiled_offset()));
+  __ lw(t0, Address(xmethod, Method::from_compiled_offset()));
   __ jr(t0);
 
   __ bind(L_no_such_interface);

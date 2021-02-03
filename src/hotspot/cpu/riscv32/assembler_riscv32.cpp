@@ -91,7 +91,7 @@ void test_assembler_entry(CodeBuffer *cb) {
 
 // AddSubImmOp
     __ addi(x9, x2, 311u);                             // addi  x9, x2, 0x137
-    __ addiw(x2, x25, 1907u);                          // addiw x2, x25, 0x773
+    __ addi(x2, x25, 1907u);                          // addiw x2, x25, 0x773
 
 // LogicalImmOp
     __ ori(x15, x1, 1657u);                            // ori x15, x1, 0x679
@@ -685,15 +685,15 @@ void Assembler::add(Register Rd, Register Rn, int64_t increment, Register temp) 
   }
 }
 
-void Assembler::addw(Register Rd, Register Rn, int64_t increment, Register temp) {
-  if (is_imm_in_range(increment, 12, 0)) {
-    addiw(Rd, Rn, increment);
-  } else {
-    assert_different_registers(Rn, temp);
-    li(temp, increment);
-    addw(Rd, Rn, temp);
-  }
-}
+// void Assembler::addw(Register Rd, Register Rn, int64_t increment, Register temp) {
+//   if (is_imm_in_range(increment, 12, 0)) {
+//     addi(Rd, Rn, increment);
+//   } else {
+//     assert_different_registers(Rn, temp);
+//     li(temp, increment);
+//     addw(Rd, Rn, temp);
+//   }
+// }
 
 void Assembler::sub(Register Rd, Register Rn, int64_t decrement, Register temp) {
   if (is_imm_in_range(-decrement, 12, 0)) {
@@ -705,15 +705,15 @@ void Assembler::sub(Register Rd, Register Rn, int64_t decrement, Register temp) 
   }
 }
 
-void Assembler::subw(Register Rd, Register Rn, int64_t decrement, Register temp) {
-  if (is_imm_in_range(-decrement, 12, 0)) {
-    addiw(Rd, Rn, -decrement);
-  } else {
-    assert_different_registers(Rn, temp);
-    li(temp, decrement);
-    subw(Rd, Rn, temp);
-  }
-}
+// void Assembler::subw(Register Rd, Register Rn, int64_t decrement, Register temp) {
+//   if (is_imm_in_range(-decrement, 12, 0)) {
+//     addiw(Rd, Rn, -decrement);
+//   } else {
+//     assert_different_registers(Rn, temp);
+//     li(temp, decrement);
+//     subw(Rd, Rn, temp);
+//   }
+// }
 
 void Assembler::li(Register Rd, int64_t imm) {
   // int64_t is in range 0x8000 0000 0000 0000 ~ 0x7fff ffff ffff ffff
@@ -742,7 +742,7 @@ void Assembler::li(Register Rd, int64_t imm) {
       hi_Rd = Rd;
     }
     if (lower != 0 || hi_Rd == zr) {
-      addiw(Rd, hi_Rd, lower);
+      addi(Rd, hi_Rd, lower);
     }
   }
 }
@@ -783,7 +783,7 @@ void Assembler::li32(Register Rd, int32_t imm) {
   // lui Rd, imm[31:12] + imm[11]
   lui(Rd, upper);
   // use addiw to distinguish li32 to li64
-  addiw(Rd, Rd, lower);
+  addi(Rd, Rd, lower);
 }
 
 #define INSN(NAME, REGISTER)                                       \

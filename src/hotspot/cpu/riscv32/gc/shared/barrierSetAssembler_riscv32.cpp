@@ -45,18 +45,18 @@ void BarrierSetAssembler::load_at(MacroAssembler* masm, DecoratorSet decorators,
   case T_ARRAY: {
     if (in_heap) {
       if (UseCompressedOops) {
-        __ lwu(dst, src);
+        __ lw(dst, src);
         if (is_not_null) {
           __ decode_heap_oop_not_null(dst);
         } else {
           __ decode_heap_oop(dst);
         }
       } else {
-        __ ld(dst, src);
+        __ lw(dst, src);
       }
     } else {
       assert(in_native, "why else?");
-      __ ld(dst, src);
+      __ lw(dst, src);
     }
     break;
   }
@@ -65,10 +65,10 @@ void BarrierSetAssembler::load_at(MacroAssembler* masm, DecoratorSet decorators,
   case T_CHAR:    __ load_unsigned_short(dst, src); break;
   case T_SHORT:   __ load_signed_short  (dst, src); break;
   case T_INT:     __ lw                 (dst, src); break;
-  case T_LONG:    __ ld                 (dst, src); break;
-  case T_ADDRESS: __ ld                 (dst, src); break;
+  case T_LONG:    __ lw                 (dst, src); break;
+  case T_ADDRESS: __ lw                 (dst, src); break;
   case T_FLOAT:   __ flw                (f10, src); break;
-  case T_DOUBLE:  __ fld                (f10, src); break;
+  case T_DOUBLE:  __ flw                (f10, src); break;
   default: Unimplemented();
   }
 }
@@ -90,11 +90,11 @@ void BarrierSetAssembler::store_at(MacroAssembler* masm, DecoratorSet decorators
         }
         __ sw(val, dst);
       } else {
-        __ sd(val, dst);
+        __ sw(val, dst);
       }
     } else {
       assert(in_native, "why else?");
-      __ sd(val, dst);
+      __ sw(val, dst);
     }
     break;
   }
@@ -106,10 +106,10 @@ void BarrierSetAssembler::store_at(MacroAssembler* masm, DecoratorSet decorators
   case T_CHAR:    __ sh(val, dst); break;
   case T_SHORT:   __ sh(val, dst); break;
   case T_INT:     __ sw(val, dst); break;
-  case T_LONG:    __ sd(val, dst); break;
-  case T_ADDRESS: __ sd(val, dst); break;
+  case T_LONG:    __ sw(val, dst); break;
+  case T_ADDRESS: __ sw(val, dst); break;
   case T_FLOAT:   __ fsw(f10,  dst); break;
-  case T_DOUBLE:  __ fsd(f10,  dst); break;
+  case T_DOUBLE:  __ fsw(f10,  dst); break;
   default: Unimplemented();
   }
 
@@ -131,7 +131,7 @@ void BarrierSetAssembler::try_resolve_jobject_in_native(MacroAssembler* masm, Re
   // If mask changes we need to ensure that the inverse is still encodable as an immediate
   STATIC_ASSERT(JNIHandles::weak_tag_mask == 1);
   __ andi(obj, obj, ~JNIHandles::weak_tag_mask);
-  __ ld(obj, Address(obj, 0));             // *obj
+  __ lw(obj, Address(obj, 0));             // *obj
 }
 
 // Defines obj, preserves var_size_in_bytes, okay for tmp2 == var_size_in_bytes.
@@ -147,17 +147,17 @@ void BarrierSetAssembler::tlab_allocate(MacroAssembler* masm, Register obj,
   assert_different_registers(obj, var_size_in_bytes);
   Register end = tmp2;
 
-  __ ld(obj, Address(xthread, JavaThread::tlab_top_offset()));
+  __ lw(obj, Address(xthread, JavaThread::tlab_top_offset()));
   if (var_size_in_bytes == noreg) {
     __ la(end, Address(obj, con_size_in_bytes));
   } else {
     __ add(end, obj, var_size_in_bytes);
   }
-  __ ld(t0, Address(xthread, JavaThread::tlab_end_offset()));
+  __ lw(t0, Address(xthread, JavaThread::tlab_end_offset()));
   __ bgtu(end, t0, slow_case, is_far);
 
   // update the tlab top pointer
-  __ sd(end, Address(xthread, JavaThread::tlab_top_offset()));
+  __ sw(end, Address(xthread, JavaThread::tlab_top_offset()));
 
   // recover var_size_in_bytes if necessary
   if (var_size_in_bytes == end) {
@@ -186,7 +186,7 @@ void BarrierSetAssembler::eden_allocate(MacroAssembler* masm, Register obj,
     ExternalAddress address_top((address) Universe::heap()->top_addr());
     __ la_patchable(t2, address_top, offset);
     __ addi(t2, t2, offset);
-    __ lr_d(obj, t2, Assembler::aqrl);
+    __ lr_w(obj, t2, Assembler::aqrl);
 
     // Adjust it my the size of our new object
     if (var_size_in_bytes == noreg) {
@@ -203,12 +203,12 @@ void BarrierSetAssembler::eden_allocate(MacroAssembler* masm, Register obj,
     ExternalAddress address_end((address) Universe::heap()->end_addr());
     offset = 0;
     __ la_patchable(heap_end, address_end, offset);
-    __ ld(heap_end, Address(heap_end, offset));
+    __ lw(heap_end, Address(heap_end, offset));
 
     __ bgtu(end, heap_end, slow_case, is_far);
 
     // If heap_top hasn't been changed by some other thread, update it.
-    __ sc_d(t1, end, t2, Assembler::rl);
+    __ sc_w(t1, end, t2, Assembler::rl);
     __ bnez(t1, retry);
     incr_allocated_bytes(masm, var_size_in_bytes, con_size_in_bytes, tmp1);
   }
@@ -221,11 +221,11 @@ void BarrierSetAssembler::incr_allocated_bytes(MacroAssembler* masm,
   assert_cond(masm != NULL);
   assert(tmp1->is_valid(), "need temp reg");
 
-  __ ld(tmp1, Address(xthread, in_bytes(JavaThread::allocated_bytes_offset())));
+  __ lw(tmp1, Address(xthread, in_bytes(JavaThread::allocated_bytes_offset())));
   if (var_size_in_bytes->is_valid()) {
     __ add(tmp1, tmp1, var_size_in_bytes);
   } else {
     __ add(tmp1, tmp1, con_size_in_bytes);
   }
-  __ sd(tmp1, Address(xthread, in_bytes(JavaThread::allocated_bytes_offset())));
+  __ sw(tmp1, Address(xthread, in_bytes(JavaThread::allocated_bytes_offset())));
 }

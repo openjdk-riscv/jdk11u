@@ -70,10 +70,10 @@ void InterpreterRuntime::SignatureHandlerGenerator::pass_long() {
   const Address src(from(), Interpreter::local_offset_in_bytes(offset() + 1));
 
   if (_num_int_args < Argument::n_int_register_parameters_c - 1) {
-    __ ld(g_INTArgReg[++_num_int_args], src);
+    __ lw(g_INTArgReg[++_num_int_args], src);
   } else {
-    __ ld(x10, src);
-    __ sd(x10, Address(to(), _stack_offset));
+    __ lw(x10, src);
+    __ sw(x10, Address(to(), _stack_offset));
     _stack_offset += wordSize;
     _num_int_args++;
   }
@@ -87,10 +87,10 @@ void InterpreterRuntime::SignatureHandlerGenerator::pass_float() {
     __ flw(g_FPArgReg[_num_fp_args++], src);
   } else if (_num_int_args < Argument::n_int_register_parameters_c - 1) {
     // to c_rarg
-    __ lwu(g_INTArgReg[++_num_int_args], src);
+    __ lw(g_INTArgReg[++_num_int_args], src);
   } else {
     // to stack
-    __ lwu(x10, src);
+    __ lw(x10, src);
     __ sw(x10, Address(to(), _stack_offset));
     _stack_offset += wordSize;
     _num_fp_args++;
@@ -105,11 +105,11 @@ void InterpreterRuntime::SignatureHandlerGenerator::pass_double() {
     __ fld(g_FPArgReg[_num_fp_args++], src);
   } else if (_num_int_args < Argument::n_int_register_parameters_c - 1) {
     // to c_rarg
-    __ ld(g_INTArgReg[++_num_int_args], src);
+    __ lw(g_INTArgReg[++_num_int_args], src);
   } else {
     // to stack
-    __ ld(x10, src);
-    __ sd(x10, Address(to(), _stack_offset));
+    __ lw(x10, src);
+    __ sw(x10, Address(to(), _stack_offset));
     _stack_offset += wordSize;
     _num_fp_args++;
   }
@@ -127,7 +127,7 @@ void InterpreterRuntime::SignatureHandlerGenerator::pass_object() {
       // c_rarg2-c_rarg7
       __ addi(x10, from(), Interpreter::local_offset_in_bytes(offset()));
       __ mv(g_INTArgReg[++_num_int_args], 0); //_num_int_args:c_rarg -> 1:c_rarg2,  2:c_rarg3...
-      __ ld(temp(), x10);
+      __ lw(temp(), x10);
       Label L;
       __ beqz(temp(), L);
       __ mv(g_INTArgReg[_num_int_args], x10);
@@ -136,12 +136,12 @@ void InterpreterRuntime::SignatureHandlerGenerator::pass_object() {
   } else {
     //to stack
     __ addi(x10, from(), Interpreter::local_offset_in_bytes(offset()));
-    __ ld(temp(), x10);
+    __ lw(temp(), x10);
     Label L;
     __ bnez(temp(), L);
     __ mv(x10, zr);
     __ bind(L);
-    __ sd(x10, Address(to(), _stack_offset));
+    __ sw(x10, Address(to(), _stack_offset));
     _stack_offset += wordSize;
     _num_int_args++;
   }
