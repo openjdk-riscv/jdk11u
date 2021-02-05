@@ -587,6 +587,22 @@
 #define NOT_AARCH64(code) code
 #endif
 
+#ifdef RISCV32
+#define RISCV32_ONLY(code) code
+#define NOT_RISCV32(code)
+#define NO_FLAG_REG
+#define NO_FLAGREG_ONLY(code) code
+#define HAS_FLAGREG_ONLY(code)
+#define NO_FLAGREG_ONLY_ARG(arg) arg,
+#else
+#define RISCV32_ONLY(code)
+#define NOT_RISCV32(code) code
+#define HAS_FLAG_REG
+#define NO_FLAGREG_ONLY(code)
+#define HAS_FLAGREG_ONLY(code) code
+#define NO_FLAGREG_ONLY_ARG(arg)
+#endif
+
 #ifdef VM_LITTLE_ENDIAN
 #define LITTLE_ENDIAN_ONLY(code) code
 #define BIG_ENDIAN_ONLY(code)

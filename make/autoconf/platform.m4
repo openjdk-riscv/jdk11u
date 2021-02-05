@@ -122,7 +122,7 @@ AC_DEFUN([PLATFORM_EXTRACT_VARS_FROM_CPU],
       ;;
     riscv64)
       VAR_CPU=riscv64
-      VAR_CPU_ARCH=riscv
+      VAR_CPU_ARCH=riscv64
       VAR_CPU_BITS=64
       VAR_CPU_ENDIAN=little
       ;;

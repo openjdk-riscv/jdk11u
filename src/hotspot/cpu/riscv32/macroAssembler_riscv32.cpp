@@ -2104,7 +2104,7 @@ Address MacroAssembler::form_address(Register Rd, Register base, long byte_offse
   }
 
   // Do it the hard way
-  mv(Rd, byte_offset);
+  mv(Rd, (address)& byte_offset);
   add(Rd, base, Rd);
   return Address(Rd);
 }

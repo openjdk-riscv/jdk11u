@@ -1237,12 +1237,19 @@ void LinearScan::add_register_hints(LIR_Op* op) {
       break;
     }
     case lir_cmove: {
+#ifndef NO_FLAG_REG
       assert(op->as_Op2() != NULL, "lir_cmove must be LIR_Op2");
       LIR_Op2* cmove = (LIR_Op2*)op;
 
       LIR_Opr move_from = cmove->in_opr1();
       LIR_Opr move_to = cmove->result_opr();
+#else
+      assert(op->as_Op4() != NULL, "lir_cmove must be LIR_Op4");
+      LIR_Op4* cmove = (LIR_Op4*)op;
 
+      LIR_Opr move_from = cmove->in_opr3();
+      LIR_Opr move_to   = cmove->in_opr4();
+#endif
       if (move_to->is_register() && move_from->is_register()) {
         Interval* from = interval_at(reg_num(move_from));
         Interval* to = interval_at(reg_num(move_to));
@@ -6074,6 +6081,16 @@ void EdgeMoveOptimizer::optimize_moves_at_block_begin(BlockBegin* block) {
       }
     }
 
+#ifdef NO_FLAG_REG
+    // Some platforms, such as riscv64, s390 and aarch64, the branch instruction may contain register operands.
+    // If the move instruction would change the branch instruction's operand after the optimization, we can't apply it.
+    if (branch->as_Op2() != NULL) {
+      LIR_Op2* branch_op2 = (LIR_Op2*)branch;
+      if (op->result_opr()->has_common_register(branch_op2->in_opr1())) return;
+      if (op->result_opr()->has_common_register(branch_op2->in_opr2())) return;
+    }
+#endif
+
     TRACE_LINEAR_SCAN(4, tty->print("----- found instruction that is equal in all %d successors: ", num_sux); op->print());
 
     // insert instruction at end of current block
@@ -6281,6 +6298,7 @@ void ControlFlowOptimizer::delete_unnecessary_jumps(BlockList* code) {
 
             if (prev_branch->stub() == NULL) {
 
+#ifndef NO_FLAG_REG
               LIR_Op2* prev_cmp = NULL;
               // There might be a cmove inserted for profiling which depends on the same
               // compare. If we change the condition of the respective compare, we have
@@ -6303,6 +6321,7 @@ void ControlFlowOptimizer::delete_unnecessary_jumps(BlockList* code) {
               }
               // Guarantee because it is dereferenced below.
               guarantee(prev_cmp != NULL, "should have found comp instruction for branch");
+#endif
               if (prev_branch->block() == code->at(i + 1) && prev_branch->info() == NULL) {
 
                 TRACE_LINEAR_SCAN(3, tty->print_cr("Negating conditional branch and deleting unconditional branch at end of block B%d", block->block_id()));
@@ -6310,8 +6329,11 @@ void ControlFlowOptimizer::delete_unnecessary_jumps(BlockList* code) {
                 // eliminate a conditional branch to the immediate successor
                 prev_branch->change_block(last_branch->block());
                 prev_branch->negate_cond();
+#ifndef NO_FLAG_REG
                 prev_cmp->set_condition(prev_branch->cond());
+#endif
                 instructions->trunc_to(instructions->length() - 1);
+#ifndef NO_FLAG_REG
                 // if we do change the condition, we have to change the cmove as well
                 if (prev_cmove != NULL) {
                   prev_cmove->set_condition(prev_branch->cond());
@@ -6319,6 +6341,7 @@ void ControlFlowOptimizer::delete_unnecessary_jumps(BlockList* code) {
                   prev_cmove->set_in_opr1(prev_cmove->in_opr2());
                   prev_cmove->set_in_opr2(t);
                 }
+#endif
               }
             }
           }
@@ -6625,7 +6648,9 @@ void LinearScanStatistic::collect(LinearScan* allocator) {
           break;
         }
 
+#ifndef NO_FLAG_REG
         case lir_cmp:             inc_counter(counter_cmp); break;
+#endif
 
         case lir_branch:
         case lir_cond_float_branch: {

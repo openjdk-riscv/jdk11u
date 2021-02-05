@@ -28,6 +28,8 @@
 
   static void setup_fpu();
 
+  static bool is_allocatable(size_t bytes);
+
   // Used to register dynamic code cache area with the OS
   // Note: Currently only used in 64 bit Windows implementations
   static bool register_code_area(char *low, char *high) { return true; }
@@ -55,5 +57,13 @@
                       : "r" (__a0), "r" (__a1), "r" (__a2), "r" (__a7)
                       : "memory");
   }
+
+  static int64_t atomic_load_long_bootstrap(const volatile int64_t*);
+
+  static void atomic_store_long_bootstrap(int64_t, volatile int64_t*);
+
+  static int64_t (*atomic_load_long_func)(const volatile int64_t*);
+
+  static void (*atomic_store_long_func)(int64_t, volatile int64_t*);
 
 #endif // OS_CPU_LINUX_RISCV32_VM_OS_LINUX_RISCV32_HPP

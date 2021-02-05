@@ -615,6 +615,47 @@ void os::print_register_info(outputStream *st, const void *context) {
 void os::setup_fpu() {
 }
 
+bool os::is_allocatable(size_t bytes) {
+  return true;
+}
+
+typedef int64_t load_long_func_t(const volatile int64_t*);
+
+load_long_func_t* os::atomic_load_long_func = os::atomic_load_long_bootstrap;
+
+int64_t os::atomic_load_long_bootstrap(const volatile int64_t* src) {
+  // try to use the stub:
+  // FIXME
+  // load_long_func_t* func = CAST_TO_FN_PTR(load_long_func_t*, StubRoutines::atomic_load_long_entry());
+
+  // if (func != NULL) {
+  //   os::atomic_load_long_func = func;
+  //   return (*func)(src);
+  // }
+  // assert(Threads::number_of_threads() == 0, "for bootstrap only");
+
+  // int64_t old_value = *src;
+  // return old_value;
+}
+
+typedef void store_long_func_t(int64_t, volatile int64_t*);
+
+store_long_func_t* os::atomic_store_long_func = os::atomic_store_long_bootstrap;
+
+void os::atomic_store_long_bootstrap(int64_t val, volatile int64_t* dest) {
+  // try to use the stub:
+  // FIXME
+  // store_long_func_t* func = CAST_TO_FN_PTR(store_long_func_t*, StubRoutines::atomic_store_long_entry());
+
+  // if (func != NULL) {
+  //   os::atomic_store_long_func = func;
+  //   return (*func)(val, dest);
+  // }
+  // assert(Threads::number_of_threads() == 0, "for bootstrap only");
+
+  // *dest = val;
+}
+
 #ifndef PRODUCT
 void os::verify_stack_alignment() {
   assert(((intptr_t)os::current_stack_pointer() & (StackAlignmentInBytes-1)) == 0, "incorrect stack alignment");

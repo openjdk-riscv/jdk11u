@@ -1667,18 +1667,18 @@ void TemplateTable::convert()
   case Bytecodes::_f2i:
     __ fcvt_w_s_safe(x10, f10);
     break;
-  case Bytecodes::_f2l:
-    __ fcvt_l_s_safe(x10, f10);
-    break;
+  // case Bytecodes::_f2l:
+  //   __ fcvt_l_s_safe(x10, f10);
+  //   break;
   case Bytecodes::_f2d:
     __ fcvt_d_s(f10, f10);
     break;
   case Bytecodes::_d2i:
     __ fcvt_w_d_safe(x10, f10);
     break;
-  case Bytecodes::_d2l:
-    __ fcvt_l_d_safe(x10, f10);
-    break;
+  // case Bytecodes::_d2l:
+  //   _masm-> fcvt_l_d_safe(x10, f10);
+  //   break;
   case Bytecodes::_d2f:
     __ fcvt_s_d(f10, f10);
     break;

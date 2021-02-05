@@ -26,6 +26,7 @@
 #ifndef OS_CPU_LINUX_RISCV32_VM_ATOMIC_LINUX_RISCV32_HPP
 #define OS_CPU_LINUX_RISCV32_VM_ATOMIC_LINUX_RISCV32_HPP
 
+#include "runtime/os.hpp"
 #include "vm_version_riscv32.hpp"
 
 // Implementation of class atomic
@@ -93,7 +94,7 @@ inline T Atomic::PlatformCmpxchg<4>::operator()(T exchange_value,
   int tmp;
   __asm volatile(
     "1:\n\t"
-    " addiw     %[tmp], %[cv], 0\n\t" // make sure compare_value signed_extend
+    " addi      %[tmp], %[cv], 0\n\t" // make sure compare_value signed_extend
     " lr.w.aq   %[rv], (%[dest])\n\t"
     " bne       %[rv], %[tmp], 2f\n\t"
     " sc.w.rl   %[tmp], %[ev], (%[dest])\n\t"
@@ -106,6 +107,23 @@ inline T Atomic::PlatformCmpxchg<4>::operator()(T exchange_value,
     FULL_MEM_BARRIER;
   }
   return rv;
+}
+
+template<>
+template<typename T>
+inline T Atomic::PlatformLoad<8>::operator()(T const volatile* src) const {
+  STATIC_ASSERT(8 == sizeof(T));
+  return PrimitiveConversions::cast<T>(
+    (*os::atomic_load_long_func)(reinterpret_cast<const volatile int64_t*>(src)));
+}
+
+template<>
+template<typename T>
+inline void Atomic::PlatformStore<8>::operator()(T store_value,
+                                                 T volatile* dest) const {
+  STATIC_ASSERT(8 == sizeof(T));
+  (*os::atomic_store_long_func)(
+    PrimitiveConversions::cast<int64_t>(store_value), reinterpret_cast<volatile int64_t*>(dest));
 }
 
 #endif // OS_CPU_LINUX_RISCV32_VM_ATOMIC_LINUX_RISCV32_HPP

@@ -9505,205 +9505,205 @@ instruct CallLeafNoFPDirect(method meth, iRegL_R6 cr)
 // gen_subtype_check()).  Return zero for a hit.  The encoding
 // ALSO sets flags.
 
-instruct partialSubtypeCheck(iRegI_R6 cr, iRegP_R14 sub, iRegP_R10 super, iRegP_R12 temp, iRegP_R15 result)
-%{
-  match(Set result (PartialSubtypeCheck sub super));
-  effect(KILL temp, KILL cr);
+// instruct partialSubtypeCheck(iRegI_R6 cr, iRegP_R14 sub, iRegP_R10 super, iRegP_R12 temp, iRegP_R15 result)
+// %{
+//   match(Set result (PartialSubtypeCheck sub super));
+//   effect(KILL temp, KILL cr);
 
-  ins_cost(2 * STORE_COST + 3 * LOAD_COST + 4 * ALU_COST + BRANCH_COST * 4);
-  format %{ "partialSubtypeCheck $result, $sub, $super\t#@partialSubtypeCheck" %}
+//   ins_cost(2 * STORE_COST + 3 * LOAD_COST + 4 * ALU_COST + BRANCH_COST * 4);
+//   format %{ "partialSubtypeCheck $result, $sub, $super\t#@partialSubtypeCheck" %}
 
-  ins_encode(riscv32_enc_partial_subtype_check(sub, super, temp, result, cr));
+//   ins_encode(riscv32_enc_partial_subtype_check(sub, super, temp, result, cr));
 
-  opcode(0x1); // Force zero of result reg on hit
+//   opcode(0x1); // Force zero of result reg on hit
 
-  ins_pipe(pipe_class_memory);
-%}
+//   ins_pipe(pipe_class_memory);
+// %}
 
-instruct partialSubtypeCheckVsZero(iRegP_R14 sub, iRegP_R10 super, iRegP_R12 temp, iRegP_R15 result,
-                                           immP0 zero, iRegI_R6 cr)
-%{
-  match(Set cr (CmpP (PartialSubtypeCheck sub super) zero));
-  effect(KILL temp, KILL result);
+// instruct partialSubtypeCheckVsZero(iRegP_R14 sub, iRegP_R10 super, iRegP_R12 temp, iRegP_R15 result,
+//                                            immP0 zero, iRegI_R6 cr)
+// %{
+//   match(Set cr (CmpP (PartialSubtypeCheck sub super) zero));
+//   effect(KILL temp, KILL result);
 
-  ins_cost(2 * STORE_COST + 3 * LOAD_COST + 4 * ALU_COST + BRANCH_COST * 4);
-  format %{ "partialSubtypeCheck $result, $sub, $super == 0\t#@partialSubtypeCheckVsZero" %}
+//   ins_cost(2 * STORE_COST + 3 * LOAD_COST + 4 * ALU_COST + BRANCH_COST * 4);
+//   format %{ "partialSubtypeCheck $result, $sub, $super == 0\t#@partialSubtypeCheckVsZero" %}
 
-  ins_encode(riscv32_enc_partial_subtype_check(sub, super, temp, result, cr));
+//   ins_encode(riscv32_enc_partial_subtype_check(sub, super, temp, result, cr));
 
-  opcode(0x0); // Don't zero result reg on hit
+//   opcode(0x0); // Don't zero result reg on hit
 
-  ins_pipe(pipe_class_memory);
-%}
+//   ins_pipe(pipe_class_memory);
+// %}
 
-instruct string_compareU(iRegP_R11 str1, iRegI_R12 cnt1, iRegP_R13 str2, iRegI_R14 cnt2,
-                         iRegI_R10 result, iRegP_R28 tmp1, iRegL_R29 tmp2, iRegL_R30 tmp3, iRegL_R6 cr)
-%{
-  predicate(((StrCompNode *)n)->encoding() == StrIntrinsicNode::UU);
-  match(Set result(StrComp(Binary str1 cnt1)(Binary str2 cnt2)));
-  effect(KILL tmp1, KILL tmp2, KILL tmp3, USE_KILL str1, USE_KILL str2, USE_KILL cnt1, USE_KILL cnt2, KILL cr);
+// instruct string_compareU(iRegP_R11 str1, iRegI_R12 cnt1, iRegP_R13 str2, iRegI_R14 cnt2,
+//                          iRegI_R10 result, iRegP_R28 tmp1, iRegL_R29 tmp2, iRegL_R30 tmp3, iRegL_R6 cr)
+// %{
+//   predicate(((StrCompNode *)n)->encoding() == StrIntrinsicNode::UU);
+//   match(Set result(StrComp(Binary str1 cnt1)(Binary str2 cnt2)));
+//   effect(KILL tmp1, KILL tmp2, KILL tmp3, USE_KILL str1, USE_KILL str2, USE_KILL cnt1, USE_KILL cnt2, KILL cr);
 
-  format %{ "String Compare $str1, $cnt1, $str2, $cnt2 -> $result\t#@string_compareU" %}
-  ins_encode %{
-    // Count is in 8-bit bytes; non-Compact chars are 16 bits.
-    __ string_compare($str1$$Register, $str2$$Register,
-                      $cnt1$$Register, $cnt2$$Register, $result$$Register,
-                      $tmp1$$Register, $tmp2$$Register, $tmp3$$Register,
-                      StrIntrinsicNode::UU);
-  %}
-  ins_pipe(pipe_class_memory);
-%}
+//   format %{ "String Compare $str1, $cnt1, $str2, $cnt2 -> $result\t#@string_compareU" %}
+//   ins_encode %{
+//     // Count is in 8-bit bytes; non-Compact chars are 16 bits.
+//     __ string_compare($str1$$Register, $str2$$Register,
+//                       $cnt1$$Register, $cnt2$$Register, $result$$Register,
+//                       $tmp1$$Register, $tmp2$$Register, $tmp3$$Register,
+//                       StrIntrinsicNode::UU);
+//   %}
+//   ins_pipe(pipe_class_memory);
+// %}
 
-instruct string_compareL(iRegP_R11 str1, iRegI_R12 cnt1, iRegP_R13 str2, iRegI_R14 cnt2,
-                         iRegI_R10 result, iRegP_R28 tmp1, iRegL_R29 tmp2, iRegL_R30 tmp3, iRegL_R6 cr)
-%{
-  predicate(((StrCompNode *)n)->encoding() == StrIntrinsicNode::LL);
-  match(Set result(StrComp(Binary str1 cnt1)(Binary str2 cnt2)));
-  effect(KILL tmp1, KILL tmp2, KILL tmp3, USE_KILL str1, USE_KILL str2, USE_KILL cnt1, USE_KILL cnt2, KILL cr);
+// instruct string_compareL(iRegP_R11 str1, iRegI_R12 cnt1, iRegP_R13 str2, iRegI_R14 cnt2,
+//                          iRegI_R10 result, iRegP_R28 tmp1, iRegL_R29 tmp2, iRegL_R30 tmp3, iRegL_R6 cr)
+// %{
+//   predicate(((StrCompNode *)n)->encoding() == StrIntrinsicNode::LL);
+//   match(Set result(StrComp(Binary str1 cnt1)(Binary str2 cnt2)));
+//   effect(KILL tmp1, KILL tmp2, KILL tmp3, USE_KILL str1, USE_KILL str2, USE_KILL cnt1, USE_KILL cnt2, KILL cr);
 
-  format %{ "String Compare $str1, $cnt1, $str2, $cnt2 -> $result\t#@string_compareL" %}
-  ins_encode %{
-    __ string_compare($str1$$Register, $str2$$Register,
-                      $cnt1$$Register, $cnt2$$Register, $result$$Register,
-                      $tmp1$$Register, $tmp2$$Register, $tmp3$$Register,
-                      StrIntrinsicNode::LL);
-  %}
-  ins_pipe(pipe_class_memory);
-%}
+//   format %{ "String Compare $str1, $cnt1, $str2, $cnt2 -> $result\t#@string_compareL" %}
+//   ins_encode %{
+//     __ string_compare($str1$$Register, $str2$$Register,
+//                       $cnt1$$Register, $cnt2$$Register, $result$$Register,
+//                       $tmp1$$Register, $tmp2$$Register, $tmp3$$Register,
+//                       StrIntrinsicNode::LL);
+//   %}
+//   ins_pipe(pipe_class_memory);
+// %}
 
-instruct string_compareUL(iRegP_R11 str1, iRegI_R12 cnt1, iRegP_R13 str2, iRegI_R14 cnt2,
-                          iRegI_R10 result, iRegP_R28 tmp1, iRegL_R29 tmp2, iRegL_R30 tmp3, iRegL_R6 cr)
-%{
-  predicate(((StrCompNode *)n)->encoding() == StrIntrinsicNode::UL);
-  match(Set result(StrComp(Binary str1 cnt1)(Binary str2 cnt2)));
-  effect(KILL tmp1, KILL tmp2, KILL tmp3, USE_KILL str1, USE_KILL str2, USE_KILL cnt1, USE_KILL cnt2, KILL cr);
+// instruct string_compareUL(iRegP_R11 str1, iRegI_R12 cnt1, iRegP_R13 str2, iRegI_R14 cnt2,
+//                           iRegI_R10 result, iRegP_R28 tmp1, iRegL_R29 tmp2, iRegL_R30 tmp3, iRegL_R6 cr)
+// %{
+//   predicate(((StrCompNode *)n)->encoding() == StrIntrinsicNode::UL);
+//   match(Set result(StrComp(Binary str1 cnt1)(Binary str2 cnt2)));
+//   effect(KILL tmp1, KILL tmp2, KILL tmp3, USE_KILL str1, USE_KILL str2, USE_KILL cnt1, USE_KILL cnt2, KILL cr);
 
-  format %{"String Compare $str1, $cnt1, $str2, $cnt2 -> $result\t#@string_compareUL" %}
-  ins_encode %{
-    __ string_compare($str1$$Register, $str2$$Register,
-                      $cnt1$$Register, $cnt2$$Register, $result$$Register,
-                      $tmp1$$Register, $tmp2$$Register, $tmp3$$Register,
-                      StrIntrinsicNode::UL);
-  %}
-  ins_pipe(pipe_class_memory);
-%}
+//   format %{"String Compare $str1, $cnt1, $str2, $cnt2 -> $result\t#@string_compareUL" %}
+//   ins_encode %{
+//     __ string_compare($str1$$Register, $str2$$Register,
+//                       $cnt1$$Register, $cnt2$$Register, $result$$Register,
+//                       $tmp1$$Register, $tmp2$$Register, $tmp3$$Register,
+//                       StrIntrinsicNode::UL);
+//   %}
+//   ins_pipe(pipe_class_memory);
+// %}
 
-instruct string_compareLU(iRegP_R11 str1, iRegI_R12 cnt1, iRegP_R13 str2, iRegI_R14 cnt2,
-                          iRegI_R10 result, iRegP_R28 tmp1, iRegL_R29 tmp2, iRegL_R30 tmp3,
-                          iRegL_R6 cr)
-%{
-  predicate(((StrCompNode *)n)->encoding() == StrIntrinsicNode::LU);
-  match(Set result(StrComp(Binary str1 cnt1)(Binary str2 cnt2)));
-  effect(KILL tmp1, KILL tmp2, KILL tmp3, USE_KILL str1, USE_KILL str2, USE_KILL cnt1, USE_KILL cnt2, KILL cr);
+// instruct string_compareLU(iRegP_R11 str1, iRegI_R12 cnt1, iRegP_R13 str2, iRegI_R14 cnt2,
+//                           iRegI_R10 result, iRegP_R28 tmp1, iRegL_R29 tmp2, iRegL_R30 tmp3,
+//                           iRegL_R6 cr)
+// %{
+//   predicate(((StrCompNode *)n)->encoding() == StrIntrinsicNode::LU);
+//   match(Set result(StrComp(Binary str1 cnt1)(Binary str2 cnt2)));
+//   effect(KILL tmp1, KILL tmp2, KILL tmp3, USE_KILL str1, USE_KILL str2, USE_KILL cnt1, USE_KILL cnt2, KILL cr);
 
-  format %{ "String Compare $str1, $cnt1, $str2, $cnt2 -> $result\t#@string_compareLU" %}
-  ins_encode %{
-    __ string_compare($str1$$Register, $str2$$Register,
-                      $cnt1$$Register, $cnt2$$Register, $result$$Register,
-                      $tmp1$$Register, $tmp2$$Register, $tmp3$$Register,
-                      StrIntrinsicNode::LU);
-  %}
-  ins_pipe(pipe_class_memory);
-%}
+//   format %{ "String Compare $str1, $cnt1, $str2, $cnt2 -> $result\t#@string_compareLU" %}
+//   ins_encode %{
+//     __ string_compare($str1$$Register, $str2$$Register,
+//                       $cnt1$$Register, $cnt2$$Register, $result$$Register,
+//                       $tmp1$$Register, $tmp2$$Register, $tmp3$$Register,
+//                       StrIntrinsicNode::LU);
+//   %}
+//   ins_pipe(pipe_class_memory);
+// %}
 
-// clearing of an array
-instruct clearArray_reg_reg(iRegL_R29 cnt, iRegP_R28 base, Universe dummy, iRegL_R6 cr)
-%{
-  match(Set dummy (ClearArray cnt base));
-  effect(USE_KILL cnt, USE_KILL base, KILL cr);
+// // clearing of an array
+// instruct clearArray_reg_reg(iRegL_R29 cnt, iRegP_R28 base, Universe dummy, iRegL_R6 cr)
+// %{
+//   match(Set dummy (ClearArray cnt base));
+//   effect(USE_KILL cnt, USE_KILL base, KILL cr);
 
-  ins_cost(4 * DEFAULT_COST);
-  format %{ "ClearArray $cnt, $base\t#@clearArray_reg_reg" %}
+//   ins_cost(4 * DEFAULT_COST);
+//   format %{ "ClearArray $cnt, $base\t#@clearArray_reg_reg" %}
 
-  ins_encode %{
-    __ zero_words($base$$Register, $cnt$$Register);
-  %}
+//   ins_encode %{
+//     __ zero_words($base$$Register, $cnt$$Register);
+//   %}
 
-  ins_pipe(pipe_class_memory);
-%}
+//   ins_pipe(pipe_class_memory);
+// %}
 
-instruct clearArray_imm_reg(immL cnt, iRegP_R28 base, Universe dummy, iRegL_R6 cr)
-%{
-  predicate((u_int64_t)n->in(2)->get_long()
-            < (u_int64_t)(BlockZeroingLowLimit >> LogBytesPerWord));
-  match(Set dummy (ClearArray cnt base));
-  effect(USE_KILL base, KILL cr);
+// instruct clearArray_imm_reg(immL cnt, iRegP_R28 base, Universe dummy, iRegL_R6 cr)
+// %{
+//   predicate((u_int64_t)n->in(2)->get_long()
+//             < (u_int64_t)(BlockZeroingLowLimit >> LogBytesPerWord));
+//   match(Set dummy (ClearArray cnt base));
+//   effect(USE_KILL base, KILL cr);
 
-  ins_cost(4 * DEFAULT_COST);
-  format %{ "ClearArray $cnt, $base\t#@clearArray_imm_reg" %}
+//   ins_cost(4 * DEFAULT_COST);
+//   format %{ "ClearArray $cnt, $base\t#@clearArray_imm_reg" %}
 
-  ins_encode %{
-    __ zero_words($base$$Register, (u_int64_t)$cnt$$constant);
-  %}
+//   ins_encode %{
+//     __ zero_words($base$$Register, (u_int64_t)$cnt$$constant);
+//   %}
 
-  ins_pipe(pipe_class_memory);
-%}
+//   ins_pipe(pipe_class_memory);
+// %}
 
-instruct string_equalsL(iRegP_R11 str1, iRegP_R13 str2, iRegI_R14 cnt,
-                        iRegI_R10 result, iRegL_R6 cr)
-%{
-  predicate(((StrEqualsNode*)n)->encoding() == StrIntrinsicNode::LL);
-  match(Set result (StrEquals (Binary str1 str2) cnt));
-  effect(USE_KILL str1, USE_KILL str2, USE_KILL cnt, KILL cr);
+// instruct string_equalsL(iRegP_R11 str1, iRegP_R13 str2, iRegI_R14 cnt,
+//                         iRegI_R10 result, iRegL_R6 cr)
+// %{
+//   predicate(((StrEqualsNode*)n)->encoding() == StrIntrinsicNode::LL);
+//   match(Set result (StrEquals (Binary str1 str2) cnt));
+//   effect(USE_KILL str1, USE_KILL str2, USE_KILL cnt, KILL cr);
 
-  format %{ "String Equals $str1, $str2, $cnt -> $result\t#@string_equalsL" %}
-  ins_encode %{
-    // Count is in 8-bit bytes; non-Compact chars are 16 bits.
-    __ string_equals($str1$$Register, $str2$$Register,
-                     $result$$Register, $cnt$$Register, 1);
-  %}
-  ins_pipe(pipe_class_memory);
-%}
+//   format %{ "String Equals $str1, $str2, $cnt -> $result\t#@string_equalsL" %}
+//   ins_encode %{
+//     // Count is in 8-bit bytes; non-Compact chars are 16 bits.
+//     __ string_equals($str1$$Register, $str2$$Register,
+//                      $result$$Register, $cnt$$Register, 1);
+//   %}
+//   ins_pipe(pipe_class_memory);
+// %}
 
-instruct string_equalsU(iRegP_R11 str1, iRegP_R13 str2, iRegI_R14 cnt,
-                        iRegI_R10 result, iRegL_R6 cr)
-%{
-  predicate(((StrEqualsNode*)n)->encoding() == StrIntrinsicNode::UU);
-  match(Set result (StrEquals (Binary str1 str2) cnt));
-  effect(USE_KILL str1, USE_KILL str2, USE_KILL cnt, KILL cr);
+// instruct string_equalsU(iRegP_R11 str1, iRegP_R13 str2, iRegI_R14 cnt,
+//                         iRegI_R10 result, iRegL_R6 cr)
+// %{
+//   predicate(((StrEqualsNode*)n)->encoding() == StrIntrinsicNode::UU);
+//   match(Set result (StrEquals (Binary str1 str2) cnt));
+//   effect(USE_KILL str1, USE_KILL str2, USE_KILL cnt, KILL cr);
 
-  format %{ "String Equals $str1, $str2, $cnt -> $result\t#@string_equalsU" %}
-  ins_encode %{
-    // Count is in 8-bit bytes; non-Compact chars are 16 bits.
-    __ string_equals($str1$$Register, $str2$$Register,
-                     $result$$Register, $cnt$$Register, 2);
-  %}
-  ins_pipe(pipe_class_memory);
-%}
+//   format %{ "String Equals $str1, $str2, $cnt -> $result\t#@string_equalsU" %}
+//   ins_encode %{
+//     // Count is in 8-bit bytes; non-Compact chars are 16 bits.
+//     __ string_equals($str1$$Register, $str2$$Register,
+//                      $result$$Register, $cnt$$Register, 2);
+//   %}
+//   ins_pipe(pipe_class_memory);
+// %}
 
-instruct array_equalsB(iRegP_R11 ary1, iRegP_R12 ary2, iRegI_R10 result,
-                       iRegP_R13 tmp1, iRegP_R14 tmp2, iRegP_R15 tmp3,
-                       iRegP_R16 tmp4, iRegP_R28 tmp, iRegL_R6 cr)
-%{
-  predicate(((AryEqNode*)n)->encoding() == StrIntrinsicNode::LL);
-  match(Set result (AryEq ary1 ary2));
-  effect(KILL tmp, USE_KILL ary1, USE_KILL ary2, TEMP tmp1, TEMP tmp2, TEMP tmp3, TEMP tmp4, KILL cr);
+// instruct array_equalsB(iRegP_R11 ary1, iRegP_R12 ary2, iRegI_R10 result,
+//                        iRegP_R13 tmp1, iRegP_R14 tmp2, iRegP_R15 tmp3,
+//                        iRegP_R16 tmp4, iRegP_R28 tmp, iRegL_R6 cr)
+// %{
+//   predicate(((AryEqNode*)n)->encoding() == StrIntrinsicNode::LL);
+//   match(Set result (AryEq ary1 ary2));
+//   effect(KILL tmp, USE_KILL ary1, USE_KILL ary2, TEMP tmp1, TEMP tmp2, TEMP tmp3, TEMP tmp4, KILL cr);
 
-  format %{ "Array Equals $ary1, ary2 -> $result\t#@array_equalsB // KILL $tmp" %}
-  ins_encode %{
-    __ arrays_equals($ary1$$Register, $ary2$$Register,
-                     $tmp1$$Register, $tmp2$$Register, $tmp3$$Register, $tmp4$$Register,
-                     $result$$Register, $tmp$$Register, 1);
-    %}
-  ins_pipe(pipe_class_memory);
-%}
+//   format %{ "Array Equals $ary1, ary2 -> $result\t#@array_equalsB // KILL $tmp" %}
+//   ins_encode %{
+//     __ arrays_equals($ary1$$Register, $ary2$$Register,
+//                      $tmp1$$Register, $tmp2$$Register, $tmp3$$Register, $tmp4$$Register,
+//                      $result$$Register, $tmp$$Register, 1);
+//     %}
+//   ins_pipe(pipe_class_memory);
+// %}
 
-instruct array_equalsC(iRegP_R11 ary1, iRegP_R12 ary2, iRegI_R10 result,
-                       iRegP_R13 tmp1, iRegP_R14 tmp2, iRegP_R15 tmp3,
-                       iRegP_R16 tmp4, iRegP_R28 tmp, iRegL_R6 cr)
-%{
-  predicate(((AryEqNode*)n)->encoding() == StrIntrinsicNode::UU);
-  match(Set result (AryEq ary1 ary2));
-  effect(KILL tmp, USE_KILL ary1, USE_KILL ary2, TEMP tmp1, TEMP tmp2, TEMP tmp3, TEMP tmp4, KILL cr);
+// instruct array_equalsC(iRegP_R11 ary1, iRegP_R12 ary2, iRegI_R10 result,
+//                        iRegP_R13 tmp1, iRegP_R14 tmp2, iRegP_R15 tmp3,
+//                        iRegP_R16 tmp4, iRegP_R28 tmp, iRegL_R6 cr)
+// %{
+//   predicate(((AryEqNode*)n)->encoding() == StrIntrinsicNode::UU);
+//   match(Set result (AryEq ary1 ary2));
+//   effect(KILL tmp, USE_KILL ary1, USE_KILL ary2, TEMP tmp1, TEMP tmp2, TEMP tmp3, TEMP tmp4, KILL cr);
 
-  format %{ "Array Equals $ary1, ary2 -> $result\t#@array_equalsC // KILL $tmp" %}
-  ins_encode %{
-    __ arrays_equals($ary1$$Register, $ary2$$Register,
-                     $tmp1$$Register, $tmp2$$Register, $tmp3$$Register, $tmp4$$Register,
-                     $result$$Register, $tmp$$Register, 2);
-  %}
-  ins_pipe(pipe_class_memory);
-%}
+//   format %{ "Array Equals $ary1, ary2 -> $result\t#@array_equalsC // KILL $tmp" %}
+//   ins_encode %{
+//     __ arrays_equals($ary1$$Register, $ary2$$Register,
+//                      $tmp1$$Register, $tmp2$$Register, $tmp3$$Register, $tmp4$$Register,
+//                      $result$$Register, $tmp$$Register, 2);
+//   %}
+//   ins_pipe(pipe_class_memory);
+// %}
 
 // ============================================================================
 // Safepoint Instructions

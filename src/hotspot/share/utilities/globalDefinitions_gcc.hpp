@@ -264,6 +264,10 @@ inline int wcslen(const jchar* x) { return wcslen((const wchar_t*)x); }
 #define JLONG_FORMAT           "%ld"
 #endif // _LP64 && __APPLE__
 
+#if defined(RISCV32)
+#define USE_LIBRARY_BASED_TLS_ONLY 1
+#endif
+
 #ifndef USE_LIBRARY_BASED_TLS_ONLY
 #define THREAD_LOCAL_DECL __thread
 #endif
