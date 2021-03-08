@@ -5666,20 +5666,20 @@ instruct get_and_setI(indirect mem, iRegI newv, iRegINoSp prev)
   ins_pipe(pipe_serial);
 %}
 
-instruct get_and_setL(indirect mem, iRegL newv, iRegLNoSp prev)
-%{
-  match(Set prev (GetAndSetL mem newv));
+// instruct get_and_setL(indirect mem, iRegL newv, iRegLNoSp prev)
+// %{
+//   match(Set prev (GetAndSetL mem newv));
 
-  ins_cost(ALU_COST);
+//   ins_cost(ALU_COST);
 
-  format %{ "atomic_xchg  $prev, $newv, [$mem]\t#@get_and_setL" %}
+//   format %{ "atomic_xchg  $prev, $newv, [$mem]\t#@get_and_setL" %}
 
-  ins_encode %{
-    __ atomic_xchg($prev$$Register, $newv$$Register, as_Register($mem$$base));
-  %}
+//   ins_encode %{
+//     __ atomic_xchg($prev$$Register, $newv$$Register, as_Register($mem$$base));
+//   %}
 
-  ins_pipe(pipe_serial);
-%}
+//   ins_pipe(pipe_serial);
+// %}
 
 instruct get_and_setN(indirect mem, iRegN newv, iRegINoSp prev)
 %{
@@ -5696,20 +5696,20 @@ instruct get_and_setN(indirect mem, iRegN newv, iRegINoSp prev)
   ins_pipe(pipe_serial);
 %}
 
-instruct get_and_setP(indirect mem, iRegP newv, iRegPNoSp prev)
-%{
-  match(Set prev (GetAndSetP mem newv));
+// instruct get_and_setP(indirect mem, iRegP newv, iRegPNoSp prev)
+// %{
+//   match(Set prev (GetAndSetP mem newv));
 
-  ins_cost(ALU_COST);
+//   ins_cost(ALU_COST);
 
-  format %{ "atomic_xchg  $prev, $newv, [$mem]\t#@get_and_setP" %}
+//   format %{ "atomic_xchg  $prev, $newv, [$mem]\t#@get_and_setP" %}
 
-  ins_encode %{
-    __ atomic_xchg($prev$$Register, $newv$$Register, as_Register($mem$$base));
-  %}
+//   ins_encode %{
+//     __ atomic_xchg($prev$$Register, $newv$$Register, as_Register($mem$$base));
+//   %}
 
-  ins_pipe(pipe_serial);
-%}
+//   ins_pipe(pipe_serial);
+// %}
 
 instruct get_and_setIAcq(indirect mem, iRegI newv, iRegINoSp prev)
 %{
@@ -5728,22 +5728,22 @@ instruct get_and_setIAcq(indirect mem, iRegI newv, iRegINoSp prev)
   ins_pipe(pipe_serial);
 %}
 
-instruct get_and_setLAcq(indirect mem, iRegL newv, iRegLNoSp prev)
-%{
-  predicate(needs_acquiring_load_exclusive(n));
+// instruct get_and_setLAcq(indirect mem, iRegL newv, iRegLNoSp prev)
+// %{
+//   predicate(needs_acquiring_load_exclusive(n));
 
-  match(Set prev (GetAndSetL mem newv));
+//   match(Set prev (GetAndSetL mem newv));
 
-  ins_cost(ALU_COST);
+//   ins_cost(ALU_COST);
 
-  format %{ "atomic_xchg_acq  $prev, $newv, [$mem]\t#@get_and_setLAcq" %}
+//   format %{ "atomic_xchg_acq  $prev, $newv, [$mem]\t#@get_and_setLAcq" %}
 
-  ins_encode %{
-    __ atomic_xchgal($prev$$Register, $newv$$Register, as_Register($mem$$base));
-  %}
+//   ins_encode %{
+//     __ atomic_xchgal($prev$$Register, $newv$$Register, as_Register($mem$$base));
+//   %}
 
-  ins_pipe(pipe_serial);
-%}
+//   ins_pipe(pipe_serial);
+// %}
 
 instruct get_and_setNAcq(indirect mem, iRegN newv, iRegINoSp prev)
 %{
@@ -5762,22 +5762,22 @@ instruct get_and_setNAcq(indirect mem, iRegN newv, iRegINoSp prev)
   ins_pipe(pipe_serial);
 %}
 
-instruct get_and_setPAcq(indirect mem, iRegP newv, iRegPNoSp prev)
-%{
-  predicate(needs_acquiring_load_exclusive(n));
+// instruct get_and_setPAcq(indirect mem, iRegP newv, iRegPNoSp prev)
+// %{
+//   predicate(needs_acquiring_load_exclusive(n));
 
-  match(Set prev (GetAndSetP mem newv));
+//   match(Set prev (GetAndSetP mem newv));
 
-  ins_cost(ALU_COST);
+//   ins_cost(ALU_COST);
 
-  format %{ "atomic_xchg_acq  $prev, $newv, [$mem]\t#@get_and_setPAcq" %}
+//   format %{ "atomic_xchg_acq  $prev, $newv, [$mem]\t#@get_and_setPAcq" %}
 
-  ins_encode %{
-    __ atomic_xchgal($prev$$Register, $newv$$Register, as_Register($mem$$base));
-  %}
+//   ins_encode %{
+//     __ atomic_xchgal($prev$$Register, $newv$$Register, as_Register($mem$$base));
+//   %}
 
-  ins_pipe(pipe_serial);
-%}
+//   ins_pipe(pipe_serial);
+// %}
 
 instruct get_and_addL(indirect mem, iRegLNoSp newval, iRegL incr)
 %{
@@ -5852,7 +5852,7 @@ instruct get_and_addI(indirect mem, iRegINoSp newval, iRegIorL2I incr)
   format %{ "get_and_addI $newval, [$mem], $incr\t#@get_and_addI" %}
 
   ins_encode %{
-    __ atomic_addw($newval$$Register, $incr$$Register, as_Register($mem$$base));
+    __ atomic_add($newval$$Register, $incr$$Register, as_Register($mem$$base));
   %}
 
   ins_pipe(pipe_serial);
@@ -5869,7 +5869,7 @@ instruct get_and_addI_no_res(indirect mem, Universe dummy, iRegIorL2I incr)
   format %{ "get_and_addI [$mem], $incr\t#@get_and_addI_no_res" %}
 
   ins_encode %{
-    __ atomic_addw(noreg, $incr$$Register, as_Register($mem$$base));
+    __ atomic_add(noreg, $incr$$Register, as_Register($mem$$base));
   %}
 
   ins_pipe(pipe_serial);
@@ -5884,7 +5884,7 @@ instruct get_and_addIi(indirect mem, iRegINoSp newval, immIAdd incr)
   format %{ "get_and_addI $newval, [$mem], $incr\t#@get_and_addIi" %}
 
   ins_encode %{
-    __ atomic_addw($newval$$Register, $incr$$constant, as_Register($mem$$base));
+    __ atomic_add($newval$$Register, $incr$$constant, as_Register($mem$$base));
   %}
 
   ins_pipe(pipe_serial);
@@ -5901,7 +5901,7 @@ instruct get_and_addIi_no_res(indirect mem, Universe dummy, immIAdd incr)
   format %{ "get_and_addI [$mem], $incr\t#@get_and_addIi_no_res" %}
 
   ins_encode %{
-    __ atomic_addw(noreg, $incr$$constant, as_Register($mem$$base));
+    __ atomic_add(noreg, $incr$$constant, as_Register($mem$$base));
   %}
 
   ins_pipe(pipe_serial);
@@ -7575,34 +7575,34 @@ instruct convI2F_reg_reg(fRegF dst, iRegIorL2I src) %{
   ins_pipe(fp_i2f);
 %}
 
-// float <-> long
+// // float <-> long
 
-instruct convF2L_reg_reg(iRegLNoSp dst, fRegF src) %{
-  match(Set dst (ConvF2L src));
+// instruct convF2L_reg_reg(iRegLNoSp dst, fRegF src) %{
+//   match(Set dst (ConvF2L src));
 
-  ins_cost(XFER_COST);
-  format %{ "fcvt.l.s  $dst, $src\t#@convF2L_reg_reg" %}
+//   ins_cost(XFER_COST);
+//   format %{ "fcvt.l.s  $dst, $src\t#@convF2L_reg_reg" %}
 
-  ins_encode %{
-    __ fcvt_l_s_safe($dst$$Register, $src$$FloatRegister);
-  %}
+//   ins_encode %{
+//     __ fcvt_l_s_safe($dst$$Register, $src$$FloatRegister);
+//   %}
 
-  ins_pipe(fp_f2l);
-%}
+//   ins_pipe(fp_f2l);
+// %}
 
-instruct convL2F_reg_reg(fRegF dst, iRegL src) %{
-  match(Set dst (ConvL2F src));
+// instruct convL2F_reg_reg(fRegF dst, iRegL src) %{
+//   match(Set dst (ConvL2F src));
 
-  ins_cost(XFER_COST);
-  format %{ "fcvt.s.w  $dst, $src\t#@convL2F_reg_reg" %}
+//   ins_cost(XFER_COST);
+//   format %{ "fcvt.s.w  $dst, $src\t#@convL2F_reg_reg" %}
 
-  ins_encode %{
-    // __ fcvt_s_l(as_FloatRegister($dst$$reg), as_Register($src$$reg));
-    __ fcvt_s_w(as_FloatRegister($dst$$reg), as_Register($src$$reg));
-  %}
+//   ins_encode %{
+//     // __ fcvt_s_l(as_FloatRegister($dst$$reg), as_Register($src$$reg));
+//     __ fcvt_s_w(as_FloatRegister($dst$$reg), as_Register($src$$reg));
+//   %}
 
-  ins_pipe(fp_l2f);
-%}
+//   ins_pipe(fp_l2f);
+// %}
 
 // double <-> int
 
@@ -7632,20 +7632,20 @@ instruct convI2D_reg_reg(fRegD dst, iRegIorL2I src) %{
   ins_pipe(fp_i2d);
 %}
 
-// double <-> long
+// // double <-> long
 
-instruct convD2L_reg_reg(iRegLNoSp dst, fRegD src) %{
-  match(Set dst (ConvD2L src));
+// instruct convD2L_reg_reg(iRegLNoSp dst, fRegD src) %{
+//   match(Set dst (ConvD2L src));
 
-  ins_cost(XFER_COST);
-  format %{ "fcvt.l.d  $dst, $src\t#@convD2L_reg_reg" %}
+//   ins_cost(XFER_COST);
+//   format %{ "fcvt.l.d  $dst, $src\t#@convD2L_reg_reg" %}
 
-  ins_encode %{
-    __ fcvt_l_d_safe($dst$$Register, $src$$FloatRegister);
-  %}
+//   ins_encode %{
+//     __ fcvt_l_d_safe($dst$$Register, $src$$FloatRegister);
+//   %}
 
-  ins_pipe(fp_d2l);
-%}
+//   ins_pipe(fp_d2l);
+// %}
 
 instruct convL2D_reg_reg(fRegD dst, iRegL src) %{
   match(Set dst (ConvL2D src));

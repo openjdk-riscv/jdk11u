@@ -977,12 +977,12 @@ void LIR_Assembler::emit_opConvert(LIR_OpConvert* op) {
     case Bytecodes::_l2i:
       _masm->block_comment("FIXME: This coulde be no-op");
       __ add(dest->as_register(), src->as_register_lo(), zr); break;
-    case Bytecodes::_d2l:
-      __ fcvt_l_d_safe(dest->as_register_lo(), src->as_double_reg()); break;
+    // case Bytecodes::_d2l:
+    //   __ fcvt_l_d_safe(dest->as_register_lo(), src->as_double_reg()); break;
     case Bytecodes::_f2i:
       __ fcvt_w_s_safe(dest->as_register(), src->as_float_reg()); break;
-    case Bytecodes::_f2l:
-      __ fcvt_l_s_safe(dest->as_register_lo(), src->as_float_reg()); break;
+    // case Bytecodes::_f2l:
+    //   __ fcvt_l_s_safe(dest->as_register_lo(), src->as_float_reg()); break;
     case Bytecodes::_d2i:
       __ fcvt_w_d_safe(dest->as_register(), src->as_double_reg()); break;
     default:
@@ -2094,19 +2094,19 @@ void LIR_Assembler::get_op(BasicType type) {
       xchg = &MacroAssembler::atomic_xchgalw;
       add = &MacroAssembler::atomic_addalw;
       break;
-    case T_LONG:
-      xchg = &MacroAssembler::atomic_xchgal;
-      add = &MacroAssembler::atomic_addal;
-      break;
+    // case T_LONG:
+    //   xchg = &MacroAssembler::atomic_xchgal;
+    //   add = &MacroAssembler::atomic_addal;
+    //   break;
     case T_OBJECT:
-    case T_ARRAY:
-      if (UseCompressedOops) {
-        xchg = &MacroAssembler::atomic_xchgalwu;
-        add = &MacroAssembler::atomic_addalw;
-      } else {
-        xchg = &MacroAssembler::atomic_xchgal;
-        add = &MacroAssembler::atomic_addal;
-      }
+    // case T_ARRAY:
+    //   if (UseCompressedOops) {
+    //     xchg = &MacroAssembler::atomic_xchgalwu;
+    //     add = &MacroAssembler::atomic_addalw;
+    //   } else {
+    //     xchg = &MacroAssembler::atomic_xchgal;
+    //     add = &MacroAssembler::atomic_addal;
+    //   }
       break;
     default:
       ShouldNotReachHere();
