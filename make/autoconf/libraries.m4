@@ -110,7 +110,7 @@ AC_DEFUN_ONCE([LIB_SETUP_LIBRARIES],
     GLOBAL_LIBS=""
   fi
 
-  BASIC_JDKLIB_LIBS=""
+  BASIC_JDKLIB_LIBS="-latomic"
   if test "x$TOOLCHAIN_TYPE" != xmicrosoft; then
     BASIC_JDKLIB_LIBS="-ljava -ljvm"
   fi
@@ -146,7 +146,8 @@ AC_DEFUN_ONCE([LIB_SETUP_LIBRARIES],
         comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib \
         wsock32.lib winmm.lib version.lib psapi.lib"
   fi
-
+  BASIC_JVM_LIBS="$BASIC_JVM_LIBS -latomic"
+  
   JDKLIB_LIBS="$BASIC_JDKLIB_LIBS"
   JDKEXE_LIBS=""
   JVM_LIBS="$BASIC_JVM_LIBS"
