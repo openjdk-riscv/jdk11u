@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_RISCV64_VM_THREAD_LINUX_RISCV64_HPP
-#define OS_CPU_LINUX_RISCV64_VM_THREAD_LINUX_RISCV64_HPP
+#ifndef OS_CPU_LINUX_RISCV32_VM_THREAD_LINUX_RISCV32_HPP
+#define OS_CPU_LINUX_RISCV32_VM_THREAD_LINUX_RISCV32_HPP
 
  private:
   void pd_initialize() {
@@ -67,4 +67,4 @@ public:
   static void enable_register_stack_guard() {}
   static void disable_register_stack_guard() {}
 
-#endif // OS_CPU_LINUX_RISCV64_VM_THREAD_LINUX_RISCV64_HPP
+#endif // OS_CPU_LINUX_RISCV32_VM_THREAD_LINUX_RISCV32_HPP

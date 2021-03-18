@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_RISCV64_VM_COPY_LINUX_RISCV64_INLINE_HPP
-#define OS_CPU_LINUX_RISCV64_VM_COPY_LINUX_RISCV64_INLINE_HPP
+#ifndef OS_CPU_LINUX_RISCV32_VM_COPY_LINUX_RISCV32_INLINE_HPP
+#define OS_CPU_LINUX_RISCV32_VM_COPY_LINUX_RISCV32_INLINE_HPP
 
 static void pd_conjoint_words(const HeapWord* from, HeapWord* to, size_t count) {
   (void)memmove(to, from, count * HeapWordSize);
@@ -113,4 +113,4 @@ static void pd_arrayof_conjoint_oops(const HeapWord* from, HeapWord* to, size_t 
   _Copy_arrayof_conjoint_jlongs(from, to, count);
 }
 
-#endif // OS_CPU_LINUX_RISCV64_VM_COPY_LINUX_RISCV64_INLINE_HPP
+#endif // OS_CPU_LINUX_RISCV32_VM_COPY_LINUX_RISCV32_INLINE_HPP

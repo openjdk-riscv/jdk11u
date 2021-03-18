@@ -23,12 +23,12 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_RISCV64_VM_ORDERACCESS_LINUX_RISCV64_HPP
-#define OS_CPU_LINUX_RISCV64_VM_ORDERACCESS_LINUX_RISCV64_HPP
+#ifndef OS_CPU_LINUX_RISCV32_VM_ORDERACCESS_LINUX_RISCV32_HPP
+#define OS_CPU_LINUX_RISCV32_VM_ORDERACCESS_LINUX_RISCV32_HPP
 
 // Included in orderAccess.hpp header file.
 
-#include "vm_version_riscv64.hpp"
+#include "vm_version_riscv32.hpp"
 
 // Implementation of class OrderAccess.
 
@@ -70,4 +70,4 @@ struct OrderAccess::PlatformOrderedStore<byte_size, RELEASE_X_FENCE>
   void operator()(T v, volatile T* p) const { release_store(p, v); fence(); }
 };
 
-#endif // OS_CPU_LINUX_RISCV64_VM_ORDERACCESS_LINUX_RISCV64_HPP
+#endif // OS_CPU_LINUX_RISCV32_VM_ORDERACCESS_LINUX_RISCV32_HPP

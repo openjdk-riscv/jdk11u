@@ -23,10 +23,10 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_RISCV64_VM_ATOMIC_LINUX_RISCV64_HPP
-#define OS_CPU_LINUX_RISCV64_VM_ATOMIC_LINUX_RISCV64_HPP
+#ifndef OS_CPU_LINUX_RISCV32_VM_ATOMIC_LINUX_RISCV32_HPP
+#define OS_CPU_LINUX_RISCV32_VM_ATOMIC_LINUX_RISCV32_HPP
 
-#include "vm_version_riscv64.hpp"
+#include "vm_version_riscv32.hpp"
 
 // Implementation of class atomic
 
@@ -108,4 +108,4 @@ inline T Atomic::PlatformCmpxchg<4>::operator()(T exchange_value,
   return rv;
 }
 
-#endif // OS_CPU_LINUX_RISCV64_VM_ATOMIC_LINUX_RISCV64_HPP
+#endif // OS_CPU_LINUX_RISCV32_VM_ATOMIC_LINUX_RISCV32_HPP

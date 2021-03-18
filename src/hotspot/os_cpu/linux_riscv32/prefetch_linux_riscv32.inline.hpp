@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_RISCV64_VM_PREFETCH_LINUX_RISCV64_INLINE_HPP
-#define OS_CPU_LINUX_RISCV64_VM_PREFETCH_LINUX_RISCV64_INLINE_HPP
+#ifndef OS_CPU_LINUX_RISCV32_VM_PREFETCH_LINUX_RISCV32_INLINE_HPP
+#define OS_CPU_LINUX_RISCV32_VM_PREFETCH_LINUX_RISCV32_INLINE_HPP
 
 #include "runtime/prefetch.hpp"
 
@@ -35,4 +35,4 @@ inline void Prefetch::read (void *loc, intx interval) {
 inline void Prefetch::write(void *loc, intx interval) {
 }
 
-#endif // OS_CPU_LINUX_RISCV64_VM_PREFETCH_LINUX_RISCV64_INLINE_HPP
+#endif // OS_CPU_LINUX_RISCV32_VM_PREFETCH_LINUX_RISCV32_INLINE_HPP
