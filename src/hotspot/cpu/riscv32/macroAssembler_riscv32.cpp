@@ -579,7 +579,7 @@ void MacroAssembler::call_native_base(address entry_point, Label *retaddr) {
   Label E, L;
   int32_t offset = 0;
   push_reg(0x80000040, sp);   // push << t0 & xmethod >> to sp
-  auipc(t0, (int32_t)entry_point);
+  lui(t0, (int32_t)entry_point + 0x800);
   jalr(x1, t0, ((int32_t)entry_point<<20)>>20);
   if (retaddr != NULL) {
     bind(*retaddr);

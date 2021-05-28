@@ -487,7 +487,7 @@ public:
     assert_cond(dest != NULL);                                                                     \
     int32_t distance = (dest - pc());                                                              \
     if (is_offset_in_range(distance, 32)) {                                                        \
-      auipc(temp, (int32_t)distance);                                                              \
+      auipc(temp, (int32_t)distance + 0x800);                                                              \
       NAME(Rd, temp, ((int32_t)distance << 20) >> 20);                                             \
     }                                                                                              \
   }                                                                                                \
@@ -605,7 +605,7 @@ public:
     assert_different_registers(Rs, temp);                                                          \
     int32_t distance = (dest - pc());                                                              \
     if (is_offset_in_range(distance, 32)) {                                                        \
-      auipc(temp, (int32_t)distance);                                                              \
+      auipc(temp, (int32_t)distance + 0x800);                                                              \
       NAME(Rs, temp, ((int32_t)distance << 20) >> 20);                                             \
     }                                                                                              \
   }                                                                                                \
@@ -644,7 +644,7 @@ public:
     assert_cond(dest != NULL);                                                                     \
     int64_t distance = (dest - pc());                                                              \
     if (is_offset_in_range(distance, 32)) {                                                        \
-      auipc(temp, (int32_t)distance);                                                              \
+      auipc(temp, (int32_t)distance + 0x800);                                                              \
       NAME(Rs, temp, ((int32_t)distance << 20) >> 20);                                             \
     }                                                                                              \
   }                                                                                                \
@@ -733,7 +733,7 @@ public:
     } else {                                                                                  \
       assert_different_registers(Rd, temp);                                                   \
       int32_t off = 0;                                                                        \
-      auipc(temp, (int32_t)dest);                                                             \
+      lui(temp, (int32_t)dest + 0x800);                                                             \
       jalr(Rd, temp, ((int32_t)dest<<20)>>20);                                                \
     }                                                                                         \
   }                                                                                           \

@@ -324,7 +324,7 @@ void NativeGeneralJump::insert_unconditional(address code_pos, address entry) {
   MacroAssembler a(&cb);
 
   int32_t offset = 0;
-  a.auipc(t0, (int32_t)entry);
+  a.lui(t0, (int32_t)entry + 0x800);
   a.jalr(x0, t0, ((int32_t)entry << 20) >> 20); // jalr
 
   ICache::invalidate_range(code_pos, instruction_size);

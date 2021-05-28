@@ -708,7 +708,7 @@ void Assembler::movptr(Register Rd, uintptr_t imm32) {
 
 void Assembler::movptr(Register Rd, address addr) {
   int offset = 0;
-  auipc(Rd, (int32_t)addr + 0x800);
+  lui(Rd, (int32_t)addr + 0x800);
   addi(Rd, Rd, ((int32_t)addr << 20) >> 20);
 }
 
