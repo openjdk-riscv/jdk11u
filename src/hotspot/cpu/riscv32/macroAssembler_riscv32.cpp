@@ -2893,11 +2893,7 @@ void MacroAssembler::load_byte_map_base(Register reg) {
 
 void MacroAssembler::la_patchable(Register reg1, const Address &dest, int32_t &offset) {
   relocInfo::relocType rtype = dest.rspec().reloc()->type();
-  unsigned long low_address = (uintptr_t)CodeCache::low_bound();
-  unsigned long high_address = (uintptr_t)CodeCache::high_bound() - 1;
-  unsigned long dest_address = (uintptr_t)dest.target();
-  long offset_low = dest_address - low_address;
-  long offset_high = dest_address - high_address;
+
 
   assert(dest.getMode() == Address::literal, "la_patchable must be applied to a literal address");
 
