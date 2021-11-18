@@ -4076,7 +4076,7 @@ void TemplateTable::wide()
 {
   __ load_unsigned_byte(x9, at_bcp(1));
   __ mv(t0, (address)Interpreter::_wentry_point);
-  __ slli(t1, x9, 3);
+  __ slli(t1, x9, 2);
   __ add(t0, t1, t0);
   __ lw(t0, Address(t0));
   __ jr(t0);
