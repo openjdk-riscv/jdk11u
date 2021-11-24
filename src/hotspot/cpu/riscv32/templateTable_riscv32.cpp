@@ -1509,7 +1509,7 @@ void TemplateTable::lshl()
   __ srli(x15, x12, 0x1);
   __ sub(x14, x14, x10);
   __ srl(x15, x15, x14);
-  __ sll(x13, x13,x10);
+  __ sll(x13, x13, x10);
   __ orr(x13, x15, x13);
   __ sll(x12, x12, x10);
 
