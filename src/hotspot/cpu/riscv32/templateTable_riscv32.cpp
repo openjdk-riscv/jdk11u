@@ -1498,7 +1498,24 @@ void TemplateTable::lshl()
   transition(itos, ltos);
   // shift count is in x10
   __ pop_l(x12, x13);
-  __ sll(x10, x12, x10);
+  Label blt_branch,done;
+  __ addi(x15,x10,-32);
+  __ bltz(x15,blt_branch);
+  __ sll(x13,x12,x15);
+  __ mv(x12,0);
+  __ beqz(zr,done);
+  __ bind(blt_branch);
+  __ mv(x14,31);
+  __ srli(x15,x12,0x1);
+  __ sub(x14,x14,x10);
+  __ srl(x15,x15,x14);
+  __ sll(x13,x13,x10);
+  __ orr(x13,x15,x13);
+  __ sll(x12, x12, x10);
+
+  __ bind(done);
+  __ mv(x10,x12);
+  __ mv(x11,x13);
 }
 
 void TemplateTable::lshr()
