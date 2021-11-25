@@ -80,7 +80,7 @@ static inline Address aaddress(int n) {
 
 static inline Address iaddress(Register r,  Register temp, InterpreterMacroAssembler* _masm) {
   assert_cond(_masm != NULL);
-  _masm->slli(temp, r, 2);
+  _masm->slli(temp, r, 3);
   _masm->add(temp, xlocals, temp);
   return Address(temp, 0);
 }
@@ -88,7 +88,7 @@ static inline Address iaddress(Register r,  Register temp, InterpreterMacroAssem
 static inline Address laddress(Register r, Register temp,
                                InterpreterMacroAssembler* _masm) {
   assert_cond(_masm != NULL);
-  _masm->slli(temp, r, 2);
+  _masm->slli(temp, r, 3);
   _masm->add(temp, xlocals, temp);
   return Address(temp, Interpreter::local_offset_in_bytes(1));;
 }
@@ -96,7 +96,7 @@ static inline Address laddress(Register r, Register temp,
 static inline Address haddress(Register r, Register temp,
                                InterpreterMacroAssembler* _masm) {
   assert_cond(_masm != NULL);
-  _masm->slli(temp, r, 2);
+  _masm->slli(temp, r, 3);
   _masm->add(temp, xlocals, temp);
   return Address(temp, Interpreter::local_offset_in_bytes(0));;
 }
@@ -262,7 +262,6 @@ void TemplateTable::lconst(int value)
 {
   transition(vtos, ltos);
   __ li(x10, value);
-  __ li(x11, 0);
 }
 
 void TemplateTable::fconst(int value)
@@ -293,7 +292,7 @@ void TemplateTable::dconst(int value)
   __ mv(t0, (intptr_t)dBuf);
   switch (value) {
   case 0:
-    __ fmv_w_x(f10, zr);
+    __ fmv_d_x(f10, zr);
     break;
   case 1:
     __ fld(f10, t0, 0);
@@ -368,7 +367,7 @@ void TemplateTable::ldc(bool wide)
   __ bne(x13, t1, notFloat);
 
   // ftos
-  __ slli(x11, x11, 2);
+  __ slli(x11, x11, 3);
   __ add(x11, x12, x11);
   __ flw(f10, Address(x11, base_offset));
   __ push_f(f10);
@@ -380,7 +379,7 @@ void TemplateTable::ldc(bool wide)
   __ bne(x13, t1, notInt);
 
   // itos
-  __ slli(x11, x11, 2);
+  __ slli(x11, x11, 3);
   __ add(x11, x12, x11);
   __ lw(x10, Address(x11, base_offset));
   __ push_i(x10);
@@ -458,7 +457,7 @@ void TemplateTable::ldc2_w()
     __ bne(x12, t1, notDouble);
 
     // dtos
-    __ slli(x12, x10, 2);
+    __ slli(x12, x10, 3);
     __ add(x12, x11, x12);
     __ fld(f10, Address(x12, base_offset));
     __ push_d(f10);
@@ -469,9 +468,8 @@ void TemplateTable::ldc2_w()
     __ bne(x12, t1, notLong);
 
     // ltos
-    __ slli(x10, x10, 2);
+    __ slli(x10, x10, 3);
     __ add(x10, x11, x10);
-    __ lw(x11, Address(x10, base_offset + wordSize));
     __ lw(x10, Address(x10, base_offset));
     __ push_l(x10);
     __ j(Done);
@@ -500,7 +498,7 @@ void TemplateTable::condy_helper(Label& Done)
   // VMr2 = flags = (tos, off) using format of CPCE::_flags
   __ mv(off, flags);
   __ mv(t0, ConstantPoolCacheEntry::field_index_mask);
-  __ andr(off, off, t0);
+  __ andrw(off, off, t0);
 
   __ add(off, obj, off);
   const Address field(off, 0); // base + R---->base + offset
@@ -1402,30 +1400,14 @@ void TemplateTable::lop2(Operation op)
 {
   transition(ltos, ltos);
   // x10 <== x11 op x10
-  __ pop_l(x12, x13);
+  __ pop_l(x11);
   switch (op) {
-  case add  : __ mv(x14, x10);
-              __ add(x10, x10, x12);
-              __ sltu(x14, x10, x14);
-              __ add(x11, x11, x13);
-              __ add(x11, x14, x11);  break;
-  case sub  : __ mv(x14, x10);
-              __ sub(x10, x10, x12);
-              __ sltu(x14, x14, x10);
-              __ sub(x11, x11, x13);
-              __ sub(x11, x11, x14);  break;
-  case mul  : __ mul(x13, x13, x10);
-              __ mul(x11, x11, x12);
-              __ mulhu(x14, x10, x12);
-              __ add(x11, x11, x13);
-              __ mul(x10, x10,x12);
-              __ add(x11, x11, x14);  break;
-  case _and : __ andr(x10, x12, x10);
-              __ andr(x11, x13, x11); break;
-  case _or  : __ orr(x10, x12, x10);
-              __ orr(x11, x13, x11);  break;
-  case _xor : __ xorr(x10, x12, x10);
-              __ xorr(x11, x13, x11); break;
+  case add  : __ add(x10, x11, x10);  break;
+  case sub  : __ sub(x10, x11, x10);  break;
+  case mul  : __ mul(x10, x11, x10);  break;
+  case _and : __ andr(x10, x11, x10); break;
+  case _or  : __ orr(x10, x11, x10);  break;
+  case _xor : __ xorr(x10, x11, x10); break;
   default   : ShouldNotReachHere();
   }
 }
@@ -1461,8 +1443,8 @@ void TemplateTable::irem()
 void TemplateTable::lmul()
 {
   transition(ltos, ltos);
-  __ pop_l(x12, x13);
-  __ mul(x10, x10, x12);
+  __ pop_l(x11);
+  __ mul(x10, x10, x11);
 }
 
 void TemplateTable::ldiv()
@@ -1474,9 +1456,9 @@ void TemplateTable::ldiv()
   __ mv(t0, Interpreter::_throw_ArithmeticException_entry);
   __ jr(t0);
   __ bind(no_div0);
-  __ pop_l(x12, x13);
+  __ pop_l(x11);
   // x10 <== x11 ldiv x10
-  __ corrected_idivq(x10, x12, x10, /* want_remainder */ false);
+  __ corrected_idivq(x10, x11, x10, /* want_remainder */ false);
 }
 
 void TemplateTable::lrem()
@@ -1488,33 +1470,67 @@ void TemplateTable::lrem()
   __ mv(t0, Interpreter::_throw_ArithmeticException_entry);
   __ jr(t0);
   __ bind(no_div0);
-  __ pop_l(x12, x13);
+  __ pop_l(x11);
   // x10 <== x11 lrem x10
-  __ corrected_idivq(x10, x12, x10, /* want_remainder */ true);
+  __ corrected_idivq(x10, x11, x10, /* want_remainder */ true);
 }
 
 void TemplateTable::lshl()
 {
   transition(itos, ltos);
   // shift count is in x10
-  __ pop_l(x12, x13);
-  __ sll(x10, x12, x10);
+  __ pop_l(x11);
+  __ sll(x10, x11, x10);
 }
 
 void TemplateTable::lshr()
 {
   transition(itos, ltos);
   // shift count is in x10
-  __ pop_l(x12, x13);
-  __ sra(x10, x12, x10);
+  __ pop_l(x11);
+ Label blt_branch,done;
+  __ addi(x15, x10, -32);
+  __ bltz(x15, blt_branch);
+  __ sra(x12, x13, x15);
+  __ srai(x13, x13, 0x1f);
+  __ beqz(zr, done);
+  __ bind(blt_branch);
+  __ mv(x14, 31);
+  __ slli(x15, x13, 0x1);
+  __ sub(x14, x14, x10);
+  __ sll(x15, x15, x14);
+  __ srl(x12, x12, x10);
+  __ orr(x12, x15, x12);
+  __ sra(x13, x13, x10);
+
+  __ bind(done);
+  __ mv(x10, x12);
+  __ mv(x11, x13);
 }
 
 void TemplateTable::lushr()
 {
   transition(itos, ltos);
   // shift count is in x10
-  __ pop_l(x12, x13);
-  __ srl(x10, x12, x10);
+  __ pop_l(x11);
+  Label blt_branch,done;
+  __ addi(x15, x10, -32);
+  __ bltz(x15, blt_branch);
+  __ srl(x12, x13, x15);
+  __ mv(x13, 0);
+  __ beqz(zr, done);
+  __ bind(blt_branch);
+  __ mv(x14, 31);
+  __ slli(x15, x13, 0x1);
+  __ sub(x14, x14, x10);
+  __ sll(x15, x15, x14);
+  __ srl(x12, x12, x10);
+  __ orr(x12, x15, x12);
+  __ srl(x13, x13, x10);
+
+  __ bind(done);
+  __ mv(x10, x12);
+  __ mv(x11, x13);
 }
 
 void TemplateTable::fop2(Operation op)
@@ -1698,16 +1714,16 @@ void TemplateTable::convert()
     __ add(x10, x10, zr);
     break;
   case Bytecodes::_l2f:
-    __ fcvt_s_w(f10, x10);
+    __ fcvt_s_l(f10, x10);
     break;
   case Bytecodes::_l2d:
-    __ fcvt_d_w(f10, x10);
+    __ fcvt_d_l(f10, x10);
     break;
   case Bytecodes::_f2i:
     __ fcvt_w_s_safe(x10, f10);
     break;
   case Bytecodes::_f2l:
-    __ fcvt_w_s_safe(x10, f10);
+    __ fcvt_l_s_safe(x10, f10);
     break;
   case Bytecodes::_f2d:
     __ fcvt_d_s(f10, f10);
@@ -1716,7 +1732,7 @@ void TemplateTable::convert()
     __ fcvt_w_d_safe(x10, f10);
     break;
   case Bytecodes::_d2l:
-    __ fcvt_w_d_safe(x10, f10);
+    __ fcvt_l_d_safe(x10, f10);
     break;
   case Bytecodes::_d2f:
     __ fcvt_s_d(f10, f10);
@@ -1729,8 +1745,8 @@ void TemplateTable::convert()
 void TemplateTable::lcmp()
 {
   transition(ltos, itos);
-  __ pop_l(x12, x13);
-  __ cmp_l2i(t0, x12, x10);
+  __ pop_l(x11);
+  __ cmp_l2i(t0, x11, x10);
   __ mv(x10, t0);
 }
 
@@ -1965,7 +1981,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
       // remove frame anchor
       __ leave();
       // Ensure compiled code always sees stack at proper alignment
-      __ andi(sp, esp, -8);
+      __ andi(sp, esp, -16);
 
       // and begin the OSR nmethod
       __ lw(t0, Address(x9, nmethod::osr_entry_point_offset()));
@@ -3054,7 +3070,7 @@ void TemplateTable::jvmti_post_fast_field_mod()
     case Bytecodes::_fast_iputfield: __ pop_i(x10); break;
     case Bytecodes::_fast_dputfield: __ pop_d(); break;
     case Bytecodes::_fast_fputfield: __ pop_f(); break;
-    case Bytecodes::_fast_lputfield: __ pop_l(); break;
+    case Bytecodes::_fast_lputfield: __ pop_l(x10); break;
     }
     __ bind(L2);
   }
@@ -3365,7 +3381,7 @@ void TemplateTable::prepare_invoke(int byte_no,
   {
     const address table_addr = (address) Interpreter::invoke_return_entry_table_for(code);
     __ mv(t0, table_addr);
-    __ slli(t1, t1, 2);
+    __ slli(t1, t1, 3);
     __ add(t0, t0, t1);
     __ lw(lr, Address(t0, 0));
   }
@@ -4093,7 +4109,7 @@ void TemplateTable::wide()
 {
   __ load_unsigned_byte(x9, at_bcp(1));
   __ mv(t0, (address)Interpreter::_wentry_point);
-  __ slli(t1, x9, 2);
+  __ slli(t1, x9, 3);
   __ add(t0, t1, t0);
   __ lw(t0, Address(t0));
   __ jr(t0);
@@ -4105,13 +4121,13 @@ void TemplateTable::multianewarray() {
   __ load_unsigned_byte(x10, at_bcp(3)); // get number of dimensions
   // last dim is on top of stack; we want address of first one:
   // first_addr = last_addr + (ndims - 1) * wordSize
-  __ slli(c_rarg1, x10, 2);
+  __ slli(c_rarg1, x10, 3);
   __ add(c_rarg1, c_rarg1, esp);
   __ sub(c_rarg1, c_rarg1, wordSize);
   call_VM(x10,
           CAST_FROM_FN_PTR(address, InterpreterRuntime::multianewarray),
           c_rarg1);
   __ load_unsigned_byte(x11, at_bcp(3));
-  __ slli(t0, x11, 2);
+  __ slli(t0, x11, 3);
   __ add(esp, esp, t0);
 }
