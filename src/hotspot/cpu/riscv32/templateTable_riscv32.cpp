@@ -1522,7 +1522,7 @@ void TemplateTable::lshr()
 {
   transition(itos, ltos);
   // shift count is in x10
-  __ pop_l(x11);
+  __ pop_l(x12, x13);
  Label blt_branch,done;
   __ addi(x15, x10, -32);
   __ bltz(x15, blt_branch);
@@ -1547,7 +1547,7 @@ void TemplateTable::lushr()
 {
   transition(itos, ltos);
   // shift count is in x10
-  __ pop_l(x11);
+  __ pop_l(x12, x13);
   Label blt_branch,done;
   __ addi(x15, x10, -32);
   __ bltz(x15, blt_branch);
