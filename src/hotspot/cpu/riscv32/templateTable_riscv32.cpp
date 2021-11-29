@@ -1640,6 +1640,7 @@ void TemplateTable::lneg()
 {
   transition(ltos, ltos);
   __ neg(x10, x10);
+  __ neg(x11, x11);
 }
 
 void TemplateTable::fneg()
