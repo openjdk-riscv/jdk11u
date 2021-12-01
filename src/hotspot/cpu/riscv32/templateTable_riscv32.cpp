@@ -797,6 +797,7 @@ void TemplateTable::laload()
   __ slli(t0, x11, 3);
   __ add(t0, t0, x10);
   __ access_load_at(T_LONG, IN_HEAP | IS_ARRAY, x10, Address(t0), noreg, noreg);
+  __ access_load_at(T_LONG, IN_HEAP | IS_ARRAY, x11, Address(t0, wordSize), noreg, noreg);
 }
 
 void TemplateTable::faload()
@@ -1097,16 +1098,18 @@ void TemplateTable::iastore() {
 
 void TemplateTable::lastore() {
   transition(ltos, vtos);
-  __ pop_i(x11);
+  __ pop_i(x12);
   __ pop_ptr(x13);
-  // x10: value
-  // x11: index
+  // x10: value low 32 bits
+  // x11: value high 32 bits
+  // x12: index
   // x13: array
-  index_check(x13, x11); // prefer index in x11
-  __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_LONG) >> 3);
-  __ slli(t0, x11, 3);
+  index_check(x13, x12); // prefer index in x11
+  __ add(x12, x12, arrayOopDesc::base_offset_in_bytes(T_LONG) >> 3);
+  __ slli(t0, x12, 3);
   __ add(t0, x13, t0);
   __ access_store_at(T_LONG, IN_HEAP | IS_ARRAY, Address(t0, 0), x10, noreg, noreg);
+  __ access_store_at(T_LONG, IN_HEAP | IS_ARRAY, Address(t0, wordSize), x11, noreg, noreg);
 }
 
 void TemplateTable::fastore() {
