@@ -591,6 +591,9 @@ void InterpreterMacroAssembler::remove_activation(
   // result check if synchronized method
   Label unlocked, unlock, no_unlock;
 
+  // store value of x11
+  mv(x15, x11);
+
   // get the value of _do_not_unlock_if_synchronized into x13
   const Address do_not_unlock_if_synchronized(xthread,
     in_bytes(JavaThread::do_not_unlock_if_synchronized_offset()));
@@ -598,8 +601,8 @@ void InterpreterMacroAssembler::remove_activation(
   sb(zr, do_not_unlock_if_synchronized); // reset the flag
 
   // get method access flags
-  lw(x11, Address(fp, frame::interpreter_frame_method_offset * wordSize));
-  lw(x12, Address(x11, Method::access_flags_offset()));
+  lw(x14, Address(fp, frame::interpreter_frame_method_offset * wordSize));
+  lw(x12, Address(x14, Method::access_flags_offset()));
   andi(t0, x12, JVM_ACC_SYNCHRONIZED);
   beqz(t0, unlocked);
 
@@ -738,6 +741,10 @@ void InterpreterMacroAssembler::remove_activation(
   }
   // remove frame anchor
   leave();
+
+  // restore value of x11
+  mv(x11, x15);
+
   // If we're returning to interpreted code we will shortly be
   // adjusting SP to allow some space for ESP.  If we're returning to
   // compiled code the saved sender SP was saved in sender_sp, so this
