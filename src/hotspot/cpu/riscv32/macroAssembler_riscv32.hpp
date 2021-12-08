@@ -771,7 +771,7 @@ class MacroAssembler: public Assembler {
   // if [src1 > src2], dst = 1;
   // if [src1 == src2], dst = 0;
   // if [src1 < src2], dst = -1;
-  void cmp_l2i(Register dst, Register src1, Register src2, Register tmp = t0);
+  void cmp_l2i(Register dst, Register src1, Register src2, Register tmp = t1);
 
   void load_constant_pool_cache(Register cpool, Register method);
 
