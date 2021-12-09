@@ -3765,8 +3765,8 @@ void TemplateTable::_new() {
       Label loop;
       __ bind(loop);
       __ sw(zr, Address(x12));
-      __ add(x12, x12, BytesPerLong);
-      __ sub(x13, x13, BytesPerLong);
+      __ add(x12, x12, BytesPerInt);
+      __ sub(x13, x13, BytesPerInt);
       __ bnez(x13, loop);
     }
 
