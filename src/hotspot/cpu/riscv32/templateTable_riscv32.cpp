@@ -1502,18 +1502,18 @@ void TemplateTable::lshl()
   // shift count is in x10
   __ pop_l(x12, x13);
   Label blt_branch,done;
-  __ addi(x15, x10, -32);
-  __ bltz(x15, blt_branch);
-  __ sll(x13, x12, x15);
+  __ addi(t0, x10, -32);
+  __ bltz(t0, blt_branch);
+  __ sll(x13, x12, t0);
   __ mv(x12, 0);
   __ beqz(zr, done);
   __ bind(blt_branch);
   __ mv(x14, 31);
-  __ srli(x15, x12, 0x1);
+  __ srli(t0, x12, 0x1);
   __ sub(x14, x14, x10);
-  __ srl(x15, x15, x14);
+  __ srl(t0, t0, x14);
   __ sll(x13, x13, x10);
-  __ orr(x13, x15, x13);
+  __ orr(x13, t0, x13);
   __ sll(x12, x12, x10);
 
   __ bind(done);
@@ -1527,18 +1527,18 @@ void TemplateTable::lshr()
   // shift count is in x10
   __ pop_l(x12, x13);
  Label blt_branch,done;
-  __ addi(x15, x10, -32);
-  __ bltz(x15, blt_branch);
-  __ sra(x12, x13, x15);
+  __ addi(t0, x10, -32);
+  __ bltz(t0, blt_branch);
+  __ sra(x12, x13, t0);
   __ srai(x13, x13, 0x1f);
   __ beqz(zr, done);
   __ bind(blt_branch);
   __ mv(x14, 31);
-  __ slli(x15, x13, 0x1);
+  __ slli(t0, x13, 0x1);
   __ sub(x14, x14, x10);
-  __ sll(x15, x15, x14);
+  __ sll(t0, t0, x14);
   __ srl(x12, x12, x10);
-  __ orr(x12, x15, x12);
+  __ orr(x12, t0, x12);
   __ sra(x13, x13, x10);
 
   __ bind(done);
@@ -1552,18 +1552,18 @@ void TemplateTable::lushr()
   // shift count is in x10
   __ pop_l(x12, x13);
   Label blt_branch,done;
-  __ addi(x15, x10, -32);
-  __ bltz(x15, blt_branch);
-  __ srl(x12, x13, x15);
+  __ addi(t0, x10, -32);
+  __ bltz(t0, blt_branch);
+  __ srl(x12, x13, t0);
   __ mv(x13, 0);
   __ beqz(zr, done);
   __ bind(blt_branch);
   __ mv(x14, 31);
-  __ slli(x15, x13, 0x1);
+  __ slli(t0, x13, 0x1);
   __ sub(x14, x14, x10);
-  __ sll(x15, x15, x14);
+  __ sll(t0, t0, x14);
   __ srl(x12, x12, x10);
-  __ orr(x12, x15, x12);
+  __ orr(x12, t0, x12);
   __ srl(x13, x13, x10);
 
   __ bind(done);
@@ -1642,8 +1642,10 @@ void TemplateTable::ineg()
 void TemplateTable::lneg()
 {
   transition(ltos, ltos);
-  __ neg(x10, x10);
-  __ neg(x11, x11);
+  __ sltu(t0, zr, x10);
+  __ sub(x10, zr, x10);
+  __ sub(x11, zr, x11);
+  __ sub(x11, x11, t0);
 }
 
 void TemplateTable::fneg()
