@@ -1642,8 +1642,10 @@ void TemplateTable::ineg()
 void TemplateTable::lneg()
 {
   transition(ltos, ltos);
-  __ neg(x10, x10);
-  __ neg(x11, x11);
+  __ sltu(x15, zr, 0);
+  __ sub(x10, zr, x10);
+  __ sub(x11, zr, x11);
+  __ sub(x11, x11, x15);
 }
 
 void TemplateTable::fneg()
