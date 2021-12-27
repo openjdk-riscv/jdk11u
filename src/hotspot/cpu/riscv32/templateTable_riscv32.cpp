@@ -572,6 +572,7 @@ void TemplateTable::condy_helper(Label& Done)
         __ bne(flags, t1, notLong);
         // ltos
         __ lw(x10, field);
+        __ lw(x11, Address(off, wordSize));
         __ push(ltos);
         __ j(Done);
 
@@ -2979,8 +2980,9 @@ void TemplateTable::putfield_or_static(int byte_no, bool is_static, RewriteContr
     __ add(off, obj, off); // if static, obj from cache, else obj from stack.
     const Address field(off, 0);
     __ access_store_at(T_LONG, IN_HEAP, field, x10, noreg, noreg);
+    __ access_store_at(T_LONG, IN_HEAP, Address(off, wordSize), x11, noreg, noreg);
     if (rc == may_rewrite) {
-      patch_bytecode(Bytecodes::_fast_lputfield, bc, x11, true, byte_no);
+      patch_bytecode(Bytecodes::_fast_lputfield, bc, t0, true, byte_no);
     }
     __ j(Done);
   }
