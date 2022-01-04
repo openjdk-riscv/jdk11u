@@ -1464,8 +1464,13 @@ void TemplateTable::irem()
 void TemplateTable::lmul()
 {
   transition(ltos, ltos);
-  __ pop_l(x12, x13);
-  __ mul(x10, x10, x12);
+ __ pop_l(x12, x13);
+ __ mul(x13, x13, x10);
+ __ mul(x11, x11, x12);
+ __ mulhu(x15, x10, x12);
+ __ add(x11, x11, x13);
+ __ mul(x10, x10, x12);
+ __ add(x11, x11, x15);
 }
 
 void TemplateTable::ldiv()
