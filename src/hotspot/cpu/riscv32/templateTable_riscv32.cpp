@@ -572,6 +572,7 @@ void TemplateTable::condy_helper(Label& Done)
         __ bne(flags, t1, notLong);
         // ltos
         __ lw(x10, field);
+        __ lw(x11, Address(off, wordSize));
         __ push(ltos);
         __ j(Done);
 
@@ -1640,8 +1641,10 @@ void TemplateTable::ineg()
 void TemplateTable::lneg()
 {
   transition(ltos, ltos);
-  __ neg(x10, x10);
-  __ neg(x11, x11);
+  __ sltu(t0, zr, x10);
+  __ sub(x10, zr, x10);
+  __ sub(x11, zr, x11);
+  __ sub(x11, x11, t0);
 }
 
 void TemplateTable::fneg()
