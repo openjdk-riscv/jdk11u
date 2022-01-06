@@ -358,10 +358,10 @@ void InterpreterMacroAssembler::push_i(Register r) {
   sw(r, Address(esp, 0));
 }
 
-void InterpreterMacroAssembler::push_l(Register r) {
+void InterpreterMacroAssembler::push_l(Register lo, Register hi) {
   addi(esp, esp, -2 * wordSize);
-  sw(zr, Address(esp, wordSize));
-  sw(r, Address(esp));
+  sw(hi, Address(esp, wordSize));
+  sw(lo, Address(esp));
 }
 
 void InterpreterMacroAssembler::pop_f(FloatRegister r) {
@@ -591,6 +591,9 @@ void InterpreterMacroAssembler::remove_activation(
   // result check if synchronized method
   Label unlocked, unlock, no_unlock;
 
+  // store value of x11
+  mv(x15, x11);
+
   // get the value of _do_not_unlock_if_synchronized into x13
   const Address do_not_unlock_if_synchronized(xthread,
     in_bytes(JavaThread::do_not_unlock_if_synchronized_offset()));
@@ -738,6 +741,8 @@ void InterpreterMacroAssembler::remove_activation(
   }
   // remove frame anchor
   leave();
+  // restore value of x11
+  mv(x11, x15);
   // If we're returning to interpreted code we will shortly be
   // adjusting SP to allow some space for ESP.  If we're returning to
   // compiled code the saved sender SP was saved in sender_sp, so this

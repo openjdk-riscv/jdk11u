@@ -130,7 +130,7 @@ class InterpreterMacroAssembler: public MacroAssembler {
   void pop_d(FloatRegister r = f10);
   void push_ptr(Register r = x10);
   void push_i(Register r = x10);
-  void push_l(Register r = x10);
+  void push_l(Register r1 = x10, Register r2 = x11);
   void push_f(FloatRegister r = f10);
   void push_d(FloatRegister r = f10);
 

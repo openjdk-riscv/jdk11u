@@ -452,11 +452,11 @@ address TemplateInterpreterGenerator::generate_return_entry_for(TosState state, 
   }
 
   // Pop N words from the stack
-  __ get_cache_and_index_at_bcp(x11, x12, 1, index_size);
-  __ lw(x11, Address(x11, ConstantPoolCache::base_offset() + ConstantPoolCacheEntry::flags_offset()));
-  __ andi(x11, x11, ConstantPoolCacheEntry::parameter_size_mask);
+  __ get_cache_and_index_at_bcp(x13, x12, 1, index_size);
+  __ lw(x13, Address(x13, ConstantPoolCache::base_offset() + ConstantPoolCacheEntry::flags_offset()));
+  __ andi(x13, x13, ConstantPoolCacheEntry::parameter_size_mask);
 
-  __ slli(t0, x11, 2);
+  __ slli(t0, x13, 2);
   __ add(esp, esp, t0);
 
   // Restore machine SP

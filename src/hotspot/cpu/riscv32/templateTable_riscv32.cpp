@@ -473,7 +473,7 @@ void TemplateTable::ldc2_w()
     __ add(x10, x11, x10);
     __ lw(x11, Address(x10, base_offset + wordSize));
     __ lw(x10, Address(x10, base_offset));
-    __ push_l(x10);
+    __ push_l(x10, x11);
     __ j(Done);
 
     __ bind(notLong);
@@ -797,7 +797,6 @@ void TemplateTable::laload()
   __ slli(t0, x11, 3);
   __ add(t0, t0, x10);
   __ access_load_at(T_LONG, IN_HEAP | IS_ARRAY, x10, Address(t0), noreg, noreg);
-  __ access_load_at(T_LONG, IN_HEAP | IS_ARRAY, x11, Address(t0, wordSize), noreg, noreg);
 }
 
 void TemplateTable::faload()
@@ -1109,7 +1108,6 @@ void TemplateTable::lastore() {
   __ slli(t0, x12, 3);
   __ add(t0, x13, t0);
   __ access_store_at(T_LONG, IN_HEAP | IS_ARRAY, Address(t0, 0), x10, noreg, noreg);
-  __ access_store_at(T_LONG, IN_HEAP | IS_ARRAY, Address(t0, wordSize), x11, noreg, noreg);
 }
 
 void TemplateTable::fastore() {
@@ -1412,10 +1410,10 @@ void TemplateTable::lop2(Operation op)
               __ sltu(x14, x10, x14);
               __ add(x11, x11, x13);
               __ add(x11, x14, x11);  break;
-  case sub  : __ mv(x14, x10);
-              __ sub(x10, x10, x12);
+  case sub  : __ mv(x14, x12);
+              __ sub(x10, x12, x10);
               __ sltu(x14, x14, x10);
-              __ sub(x11, x11, x13);
+              __ sub(x11, x13, x11);
               __ sub(x11, x11, x14);  break;
   case mul  : __ mul(x13, x13, x10);
               __ mul(x11, x11, x12);
@@ -1736,7 +1734,7 @@ void TemplateTable::convert()
   // Conversion
   switch (bytecode()) {
   case Bytecodes::_i2l:
-    __ sign_ext(x10, x10, registerSize - 32);
+    __ srai(x11, x10, 0x1f);
     break;
   case Bytecodes::_i2f:
     __ fcvt_s_w(f10, x10);
@@ -3087,7 +3085,7 @@ void TemplateTable::jvmti_post_fast_field_mod()
     case Bytecodes::_fast_iputfield: __ push_i(x10); break;
     case Bytecodes::_fast_dputfield: __ push_d(); break;
     case Bytecodes::_fast_fputfield: __ push_f(); break;
-    case Bytecodes::_fast_lputfield: __ push_l(x10); break;
+    case Bytecodes::_fast_lputfield: __ push_l(x10, x11); break;
 
     default:
       ShouldNotReachHere();
@@ -3128,7 +3126,7 @@ void TemplateTable::fast_storefield(TosState state)
   jvmti_post_fast_field_mod();
 
   // access constant pool cache
-  __ get_cache_and_index_at_bcp(x12, x11, 1);
+  __ get_cache_and_index_at_bcp(x12, x14, 1);
 
   // Must prevent reordering of the following cp cache loads with bytecode load
   __ membar(MacroAssembler::LoadLoad);
@@ -3138,7 +3136,7 @@ void TemplateTable::fast_storefield(TosState state)
                                     ConstantPoolCacheEntry::flags_offset())));
 
   // replace index with field offset from cache entry
-  __ lw(x11, Address(x12, in_bytes(base + ConstantPoolCacheEntry::f2_offset())));
+  __ lw(x14, Address(x12, in_bytes(base + ConstantPoolCacheEntry::f2_offset())));
 
   {
     Label notVolatile;
@@ -3154,8 +3152,8 @@ void TemplateTable::fast_storefield(TosState state)
   pop_and_check_object(x12);
 
   // field address
-  __ add(x11, x12, x11);
-  const Address field(x11, 0);
+  __ add(x14, x12, x14);
+  const Address field(x14, 0);
 
   // access field
   switch (bytecode()) {

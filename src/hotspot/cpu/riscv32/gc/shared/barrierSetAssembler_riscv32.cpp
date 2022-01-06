@@ -66,7 +66,9 @@ void BarrierSetAssembler::load_at(MacroAssembler* masm, DecoratorSet decorators,
   case T_CHAR:    __ load_unsigned_short(dst, src); break;
   case T_SHORT:   __ load_signed_short  (dst, src); break;
   case T_INT:     __ lw                 (dst, src); break;
-  case T_LONG:    __ lw                 (dst, src); break;
+  case T_LONG:    __ lw(dst, src);
+                  __ lw(dst + 1, Address(src.base(), src.offset() + wordSize));
+                                                    break;
   case T_ADDRESS: __ lw                 (dst, src); break;
   case T_FLOAT:   __ flw                (f10, src); break;
   case T_DOUBLE:  __ fld                (f10, src); break;
@@ -107,7 +109,9 @@ void BarrierSetAssembler::store_at(MacroAssembler* masm, DecoratorSet decorators
   case T_CHAR:    __ sh(val, dst); break;
   case T_SHORT:   __ sh(val, dst); break;
   case T_INT:     __ sw(val, dst); break;
-  case T_LONG:    __ sw(val, dst); break;
+  case T_LONG:    __ sw(val, dst);
+                  __ sw(val + 1, Address(dst.base(), dst.offset() + wordSize));
+                                   break;
   case T_ADDRESS: __ sw(val, dst); break;
   case T_FLOAT:   __ fsw(f10,  dst); break;
   case T_DOUBLE:  __ fsd(f10,  dst); break;
