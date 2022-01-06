@@ -610,6 +610,15 @@ void MacroAssembler::call_VM_leaf(address entry_point, Register arg_0,
   call_VM_leaf_base(entry_point, 3);
 }
 
+void MacroAssembler::call_VM_leaf(address entry_point, Register arg_0,
+                                  Register arg_1, Register arg_2, Register arg_3) {
+  pass_arg0(this, arg_0);
+  pass_arg1(this, arg_1);
+  pass_arg2(this, arg_2);
+  pass_arg3(this, arg_3);
+  call_VM_leaf_base(entry_point, 4);
+}
+
 void MacroAssembler::super_call_VM_leaf(address entry_point, Register arg_0) {
   pass_arg0(this, arg_0);
   MacroAssembler::call_VM_leaf_base(entry_point, 1);

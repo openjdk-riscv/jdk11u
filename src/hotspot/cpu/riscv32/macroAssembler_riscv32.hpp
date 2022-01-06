@@ -125,6 +125,8 @@ class MacroAssembler: public Assembler {
                     Register arg_0, Register arg_1);
   void call_VM_leaf(address entry_point,
                     Register arg_0, Register arg_1, Register arg_2);
+  void call_VM_leaf(address entry_point,
+                    Register arg_0, Register arg_1, Register arg_2, Register arg_3);
 
   // These always tightly bind to MacroAssembler::call_VM_base
   // bypassing the virtual implementation

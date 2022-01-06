@@ -1471,13 +1471,14 @@ void TemplateTable::ldiv()
   transition(ltos, ltos);
   // explicitly check for div0
   Label no_div0;
-  __ bnez(x10, no_div0);
+  __ orr(t1, x10, x11);
+  __ bnez(t1, no_div0);
   __ mv(t0, Interpreter::_throw_ArithmeticException_entry);
   __ jr(t0);
   __ bind(no_div0);
   __ pop_l(x12, x13);
   // x10 <== x11 ldiv x10
-  __ corrected_idivq(x10, x12, x10, /* want_remainder */ false);
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::ldiv), x10, x11, x12, x13);
 }
 
 void TemplateTable::lrem()
