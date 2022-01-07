@@ -4463,7 +4463,7 @@ void MacroAssembler::cmp_l2i(Register dst, Register src1, Register src2, Registe
     mv(dst, zr);
     return;
   }
-  Label done, done_lo;
+  Label done;
   Register left_lo  = src1;
   Register left_hi  = src1 + 1;
   Register right_lo = src2;
@@ -4482,12 +4482,9 @@ void MacroAssembler::cmp_l2i(Register dst, Register src1, Register src2, Registe
   // compare low 32-bit
   // installs 1 if gt else 0
   sltu(dst, right_lo, left_lo);
-  bnez(dst, done_lo);
+  bnez(dst, done);
   sltu(dst, left_lo, right_lo);
   // dst = -1 if lt; else if eq , dst = 0
-  neg(dst, dst);
-  bind(done_lo);
-  beqz(tmp, done);
   neg(dst, dst);
   bind(done);
 }
