@@ -572,6 +572,7 @@ void TemplateTable::condy_helper(Label& Done)
         __ bne(flags, t1, notLong);
         // ltos
         __ lw(x10, field);
+        __ lw(x11, Address(off, wordSize));
         __ push(ltos);
         __ j(Done);
 
@@ -1476,13 +1477,14 @@ void TemplateTable::ldiv()
   transition(ltos, ltos);
   // explicitly check for div0
   Label no_div0;
-  __ bnez(x10, no_div0);
+  __ orr(t1, x10, x11);
+  __ bnez(t1, no_div0);
   __ mv(t0, Interpreter::_throw_ArithmeticException_entry);
   __ jr(t0);
   __ bind(no_div0);
   __ pop_l(x12, x13);
   // x10 <== x11 ldiv x10
-  __ corrected_idivq(x10, x12, x10, /* want_remainder */ false);
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::ldiv), x10, x11, x12, x13);
 }
 
 void TemplateTable::lrem()
@@ -1490,13 +1492,14 @@ void TemplateTable::lrem()
   transition(ltos, ltos);
   // explicitly check for div0
   Label no_div0;
-  __ bnez(x10, no_div0);
+  __ orr(t1, x10, x11);
+  __ bnez(t1, no_div0);
   __ mv(t0, Interpreter::_throw_ArithmeticException_entry);
   __ jr(t0);
   __ bind(no_div0);
   __ pop_l(x12, x13);
   // x10 <== x11 lrem x10
-  __ corrected_idivq(x10, x12, x10, /* want_remainder */ true);
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::lrem), x10, x11, x12, x13);
 }
 
 void TemplateTable::lshl()
@@ -1645,8 +1648,10 @@ void TemplateTable::ineg()
 void TemplateTable::lneg()
 {
   transition(ltos, ltos);
-  __ neg(x10, x10);
-  __ neg(x11, x11);
+  __ sltu(t0, zr, x10);
+  __ sub(x10, zr, x10);
+  __ sub(x11, zr, x11);
+  __ sub(x11, x11, t0);
 }
 
 void TemplateTable::fneg()

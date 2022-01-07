@@ -610,6 +610,15 @@ void MacroAssembler::call_VM_leaf(address entry_point, Register arg_0,
   call_VM_leaf_base(entry_point, 3);
 }
 
+void MacroAssembler::call_VM_leaf(address entry_point, Register arg_0,
+                                  Register arg_1, Register arg_2, Register arg_3) {
+  pass_arg0(this, arg_0);
+  pass_arg1(this, arg_1);
+  pass_arg2(this, arg_2);
+  pass_arg3(this, arg_3);
+  call_VM_leaf_base(entry_point, 4);
+}
+
 void MacroAssembler::super_call_VM_leaf(address entry_point, Register arg_0) {
   pass_arg0(this, arg_0);
   MacroAssembler::call_VM_leaf_base(entry_point, 1);
@@ -1749,7 +1758,7 @@ void MacroAssembler::encode_klass_not_null(Register dst, Register src, Register 
 
   if (((uint32_t)(uintptr_t)Universe::narrow_klass_base() & 0xffffffff) == 0 &&
       Universe::narrow_klass_shift() == 0) {
-    zero_ext(dst, src, 32); // clear upper 32 bits
+    mv(dst, src);
     return;
   }
 
@@ -4454,7 +4463,7 @@ void MacroAssembler::cmp_l2i(Register dst, Register src1, Register src2, Registe
     mv(dst, zr);
     return;
   }
-  Label done, done_lo;
+  Label done;
   Register left_lo  = src1;
   Register left_hi  = src1 + 1;
   Register right_lo = src2;
@@ -4473,12 +4482,9 @@ void MacroAssembler::cmp_l2i(Register dst, Register src1, Register src2, Registe
   // compare low 32-bit
   // installs 1 if gt else 0
   sltu(dst, right_lo, left_lo);
-  bnez(dst, done_lo);
+  bnez(dst, done);
   sltu(dst, left_lo, right_lo);
   // dst = -1 if lt; else if eq , dst = 0
-  neg(dst, dst);
-  bind(done_lo);
-  beqz(tmp, done);
   neg(dst, dst);
   bind(done);
 }
