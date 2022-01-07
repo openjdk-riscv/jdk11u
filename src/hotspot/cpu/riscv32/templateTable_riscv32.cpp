@@ -1493,7 +1493,7 @@ void TemplateTable::lrem()
   __ bind(no_div0);
   __ pop_l(x12, x13);
   // x10 <== x11 lrem x10
-__ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::lrem), x10, x11, x12, x13);
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::lrem), x10, x11, x12, x13);
 }
 
 void TemplateTable::lshl()
