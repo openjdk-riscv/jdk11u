@@ -2160,10 +2160,6 @@ class StubGenerator: public StubCodeGenerator {
         // int32_t
         __ lw(c_rarg1, Address(c_rarg0, 0));
         break;
-      case 8:
-        // int64_t
-        __ lw(c_rarg1, Address(c_rarg0, 0));
-        break;
       default:
         ShouldNotReachHere();
     }

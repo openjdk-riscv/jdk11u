@@ -154,7 +154,7 @@ class Address {
 
  private:
   Register _base;
-  int64_t _offset;
+  int32_t _offset;
   enum mode _mode;
 
   RelocationHolder _rspec;
@@ -519,7 +519,7 @@ public:
 #undef INSN
 
 #define INSN(NAME, op, funct3)                                                                           \
-  void NAME(Register Rs1, Register Rs2, const int64_t offset) {                                          \
+  void NAME(Register Rs1, Register Rs2, const int32_t offset) {                                          \
     unsigned insn = 0;                                                                                   \
     guarantee(is_imm_in_range(offset, 12, 1), "offset is invalid.");                                     \
     uint32_t val  = offset & 0x1fff;                                                                     \
@@ -539,7 +539,7 @@ public:
   }                                                                                                      \
   void NAME(Register Rs1, Register Rs2, const address dest) {                                            \
     assert_cond(dest != NULL);                                                                           \
-    int64_t offset = (dest - pc());                                                                      \
+    int32_t offset = (dest - pc());                                                                      \
     guarantee(is_imm_in_range(offset, 12, 1), "offset is invalid.");                                     \
     NAME(Rs1, Rs2, offset);                                                                              \
   }                                                                                                      \

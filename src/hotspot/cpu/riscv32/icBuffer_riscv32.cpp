@@ -58,7 +58,7 @@ void InlineCacheBuffer::assemble_ic_buffer_code(address code_begin, void* cached
   __ far_jump(ExternalAddress(entry_point));
   __ align(wordSize);
   __ bind(l);
-  __ emit_int64((intptr_t)cached_value);
+  __ emit_int32((intptr_t)cached_value);
   // Only need to invalidate the 1st two instructions - not the whole ic stub
   ICache::invalidate_range(code_begin, InlineCacheBuffer::ic_stub_code_size());
   assert(__ pc() - start == ic_stub_code_size(), "must be");
