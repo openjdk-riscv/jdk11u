@@ -758,10 +758,6 @@ void TemplateTable::index_check(Register array, Register index)
   // check index
   const Register length = t0;
   __ lw(length, Address(array, arrayOopDesc::length_offset_in_bytes()));
-  if (index != x11) {
-    assert(x11 != array, "different registers");
-    __ mv(x11, index);
-  }
   Label ok;
   __ add(index, index, zr);
   __ bltu(index, length, ok);
