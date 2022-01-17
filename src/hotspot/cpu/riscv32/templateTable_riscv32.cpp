@@ -289,17 +289,17 @@ void TemplateTable::fconst(int value)
 void TemplateTable::dconst(int value)
 {
   transition(vtos, dtos);
-  static double dBuf[2] = {1.0, 2.0};
+  static double dBuf[3] = {0.0, 1.0, 2.0};
   __ mv(t0, (intptr_t)dBuf);
   switch (value) {
   case 0:
-    __ fmv_w_x(f10, zr);
-    break;
-  case 1:
     __ fld(f10, t0, 0);
     break;
-  case 2:
+  case 1:
     __ fld(f10, t0, sizeof(double));
+    break;
+  case 2:
+    __ fld(f10, t0, sizeof(double) * 2);
     break;
   default:
     ShouldNotReachHere();
@@ -758,9 +758,9 @@ void TemplateTable::index_check(Register array, Register index)
   // check index
   const Register length = t0;
   __ lw(length, Address(array, arrayOopDesc::length_offset_in_bytes()));
-  if (index != x11) {
-    assert(x11 != array, "different registers");
-    __ mv(x11, index);
+  if (index != x14) {
+    assert(x14 != array, "different registers");
+    __ mv(x14, index);
   }
   Label ok;
   __ add(index, index, zr);
@@ -1507,6 +1507,9 @@ void TemplateTable::lshl()
   transition(itos, ltos);
   // shift count is in x10
   __ pop_l(x12, x13);
+  // only the low 6 bits of rs2 are considered for the shift amount
+  __ andi(x10, x10, 0x3f);
+
   Label blt_branch,done;
   __ addi(x15, x10, -32);
   __ bltz(x15, blt_branch);
@@ -1532,7 +1535,10 @@ void TemplateTable::lshr()
   transition(itos, ltos);
   // shift count is in x10
   __ pop_l(x12, x13);
- Label blt_branch,done;
+  // only the low 6 bits of rs2 are considered for the shift amount
+  __ andi(x10, x10, 0x3f);
+
+  Label blt_branch,done;
   __ addi(x15, x10, -32);
   __ bltz(x15, blt_branch);
   __ sra(x12, x13, x15);
@@ -1557,6 +1563,9 @@ void TemplateTable::lushr()
   transition(itos, ltos);
   // shift count is in x10
   __ pop_l(x12, x13);
+  // only the low 6 bits of rs2 are considered for the shift amount
+  __ andi(x10, x10, 0x3f);
+
   Label blt_branch,done;
   __ addi(x15, x10, -32);
   __ bltz(x15, blt_branch);
@@ -1760,16 +1769,16 @@ void TemplateTable::convert()
     __ add(x10, x10, zr);
     break;
   case Bytecodes::_l2f:
-    __ fcvt_s_w(f10, x10);
+    __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::l2f), x10, x11);
     break;
   case Bytecodes::_l2d:
-    __ fcvt_d_w(f10, x10);
+    __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::l2d), x10, x11);
     break;
   case Bytecodes::_f2i:
     __ fcvt_w_s_safe(x10, f10);
     break;
   case Bytecodes::_f2l:
-    __ fcvt_w_s_safe(x10, f10);
+    __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::f2l), f10);
     break;
   case Bytecodes::_f2d:
     __ fcvt_d_s(f10, f10);
@@ -1778,7 +1787,7 @@ void TemplateTable::convert()
     __ fcvt_w_d_safe(x10, f10);
     break;
   case Bytecodes::_d2l:
-    __ fcvt_w_d_safe(x10, f10);
+    __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::d2l), f10);
     break;
   case Bytecodes::_d2f:
     __ fcvt_s_d(f10, f10);

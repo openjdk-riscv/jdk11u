@@ -66,6 +66,13 @@ static void pass_arg0(MacroAssembler* masm, Register arg) {
   }
 }
 
+static void pass_arg0(MacroAssembler* masm, FloatRegister arg) {
+  if (c_farg0 != arg ) {
+    assert_cond(masm != NULL);
+    masm->fmv_d(c_farg0, arg);
+  }
+}
+
 static void pass_arg1(MacroAssembler* masm, Register arg) {
   if (c_rarg1 != arg ) {
     assert_cond(masm != NULL);
@@ -592,6 +599,11 @@ void MacroAssembler::call_VM_leaf(address entry_point, int number_of_arguments) 
 }
 
 void MacroAssembler::call_VM_leaf(address entry_point, Register arg_0) {
+  pass_arg0(this, arg_0);
+  call_VM_leaf_base(entry_point, 1);
+}
+
+void MacroAssembler::call_VM_leaf(address entry_point, FloatRegister arg_0) {
   pass_arg0(this, arg_0);
   call_VM_leaf_base(entry_point, 1);
 }

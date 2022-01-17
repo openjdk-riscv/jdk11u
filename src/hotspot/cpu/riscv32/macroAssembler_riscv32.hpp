@@ -122,6 +122,8 @@ class MacroAssembler: public Assembler {
   void call_VM_leaf(address entry_point,
                     Register arg_0);
   void call_VM_leaf(address entry_point,
+                    FloatRegister arg_0);
+  void call_VM_leaf(address entry_point,
                     Register arg_0, Register arg_1);
   void call_VM_leaf(address entry_point,
                     Register arg_0, Register arg_1, Register arg_2);
