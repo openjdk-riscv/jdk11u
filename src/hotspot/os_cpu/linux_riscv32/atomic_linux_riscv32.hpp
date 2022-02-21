@@ -110,13 +110,21 @@ inline T Atomic::PlatformCmpxchg<4>::operator()(T exchange_value,
   return rv;
 }
 
-/*template<>
+template<>
 template<typename T>
-inline T Atomic::PlatformLoad<8>::operator()(T const volatile* src) const {}
+inline T Atomic::PlatformLoad<8>::operator()(T const volatile* src) const {
+  STATIC_ASSERT(8 == sizeof(T));
+  volatile int64_t dest;
+  os::atomic_copy64(reinterpret_cast<const volatile int64_t*>(src), reinterpret_cast<volatile int64_t*>(&dest));
+  return PrimitiveConversions::cast<T>(dest);
+}
 
 template<>
 template<typename T>
 inline void Atomic::PlatformStore<8>::operator()(T store_value,
-                                                 T volatile* dest) const {}
-*/
+                                                 T volatile* dest) const {
+  STATIC_ASSERT(8 == sizeof(T));
+  os::atomic_copy64(reinterpret_cast<const volatile int64_t*>(&store_value), reinterpret_cast<volatile int64_t*>(dest));                                                 
+}
+
 #endif // OS_CPU_LINUX_RISCV32_VM_ATOMIC_LINUX_RISCV32_HPP
