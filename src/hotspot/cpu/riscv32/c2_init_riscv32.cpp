@@ -28,7 +28,7 @@
 #include "opto/compile.hpp"
 #include "opto/node.hpp"
 
-// processor dependent initialization for riscv64
+// processor dependent initialization for riscv32
 
 extern void reg_mask_init();
 

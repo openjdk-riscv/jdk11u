@@ -45,7 +45,7 @@
 #include "c1/c1_Runtime1.hpp"
 #endif
 #ifdef COMPILER2
-#include "adfiles/ad_riscv64.hpp"
+#include "adfiles/ad_riscv32.hpp"
 #include "opto/runtime.hpp"
 #endif
 
@@ -64,7 +64,7 @@ class SimpleRuntimeFrame {
     // The frame sender code expects that fp will be in the "natural" place and
     // will override any oopMap setting for it. We must therefore force the layout
     // so that it agrees with the frame sender code.
-    // we don't expect any arg reg save area so riscv64 asserts that
+    // we don't expect any arg reg save area so riscv32 asserts that
     // frame::arg_reg_save_area_bytes == 0
     fp_off = 0, fp_off2,
     return_off, return_off2,
@@ -188,7 +188,7 @@ void RegisterSaver::restore_result_registers(MacroAssembler* masm) {
 }
 
 // Is vector's size (in bytes) bigger than a size saved by default?
-// 8 bytes vector registers are saved by default on riscv64.
+// 8 bytes vector registers are saved by default on riscv32.
 bool SharedRuntime::is_wide_vector(int size) {
   return size > 8;
 }
@@ -641,7 +641,7 @@ int SharedRuntime::c_calling_convention(const BasicType *sig_bt,
                                          VMRegPair *regs,
                                          VMRegPair *regs2,
                                          int total_args_passed) {
-  assert(regs2 == NULL, "not needed on riscv64");
+  assert(regs2 == NULL, "not needed on riscv32");
   assert_cond(sig_bt != NULL && regs != NULL);
 
   // We return the amount of VMRegImpl stack slots we need to reserve for all
@@ -1754,7 +1754,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
       ShouldNotReachHere();
     }
     rt_call(masm, native_func,
-            int_args + 2, // riscv64 passes up to 8 args in int registers
+            int_args + 2, // riscv32 passes up to 8 args in int registers
             float_args,   // and up to 8 float args
             return_type);
   }
@@ -2119,7 +2119,7 @@ void SharedRuntime::generate_deopt_blob() {
   // In the case of an exception pending when deoptimizing, we enter
   // with a return address on the stack that points after the call we patched
   // into the exception handler. We have the following register state from,
-  // e.g., the forward exception stub (see stubGenerator_riscv64.cpp).
+  // e.g., the forward exception stub (see stubGenerator_riscv32.cpp).
   //    x10: exception oop
   //    x9: exception handler
   //    x13: throwing pc
@@ -2818,12 +2818,12 @@ RuntimeStub* SharedRuntime::generate_resolve_blob(address destination, const cha
 }
 
 #ifdef COMPILER2
-// This is here instead of runtime_riscv64.cpp because it uses SimpleRuntimeFrame
+// This is here instead of runtime_riscv32.cpp because it uses SimpleRuntimeFrame
 //
 //------------------------------generate_exception_blob---------------------------
 // creates exception blob at the end
 // Using exception blob, this code is jumped from a compiled method.
-// (see emit_exception_handler in riscv64.ad file)
+// (see emit_exception_handler in riscv32.ad file)
 //
 // Given an exception pc at a call we call into the runtime for the
 // handler in this method. This handler might merely restore state

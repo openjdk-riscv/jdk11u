@@ -2660,9 +2660,9 @@ class StubGenerator: public StubCodeGenerator {
 
   void generate_string_indexof_stubs()
   {
-    StubRoutines::riscv64::_string_indexof_linear_ll = generate_string_indexof_linear(true, true);
-    StubRoutines::riscv64::_string_indexof_linear_uu = generate_string_indexof_linear(false, false);
-    StubRoutines::riscv64::_string_indexof_linear_ul = generate_string_indexof_linear(true, false);
+    StubRoutines::riscv32::_string_indexof_linear_ll = generate_string_indexof_linear(true, true);
+    StubRoutines::riscv32::_string_indexof_linear_uu = generate_string_indexof_linear(false, false);
+    StubRoutines::riscv32::_string_indexof_linear_ul = generate_string_indexof_linear(true, false);
   }
 #endif // COMPILER2
 

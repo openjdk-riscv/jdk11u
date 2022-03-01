@@ -59,7 +59,7 @@ private:
   bool pd_get_top_frame(frame* fr_addr, void* ucontext, bool isInJava);
 public:
 
-  static Thread *riscv64_get_thread_helper();
+  static Thread *riscv32_get_thread_helper();
 
   // These routines are only used on cpu architectures that
   // have separate register stacks (Itanium).
