@@ -7147,13 +7147,6 @@ instruct bytes_reverse_long(rFlagsReg cr, iRegLNoSp dst, iRegL src) %{
   match(Set dst (ReverseBytesL src));
   effect(TEMP cr);
 
-  ins_cost(ALU_COST * 45);
-  format %{ "grev  $dst, $src\t#@bytes_reverse_long" %}
-
-  ins_encode %{
-    __ grev(as_Register($dst$$reg), as_Register($src$$reg));
-  %}
-
   ins_pipe(ialu_reg);
 %}
 
