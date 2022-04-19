@@ -360,8 +360,36 @@ reg_class int_r14_reg(R14);
 
 // Class for all long registers
 reg_class all_reg(
-    R0,R1,
-    R2,R3
+    R0,
+    R1,
+    R2,
+    R3,
+    R4,
+    R7,
+    R8,
+    R9,
+    R10,
+    R11,
+    R12,
+    R13,
+    R14,
+    R15,
+    R16,
+    R17,
+    R18,
+    R19,
+    R20,
+    R21,
+    R22,
+    R23,
+    R24,
+    R25,
+    R26,
+    R27,
+    R28,
+    R29,
+    R30,
+    R31
 );
 
 reg_class long_r0r1_reg(R0, R1);
@@ -374,6 +402,16 @@ reg_class any_reg %{
 
 // Class for non-allocatable 32 bit registers
 reg_class non_allocatable_reg32(
+    R0,                       // zr
+    R1,                       // lr
+    R2,                       // sp
+    R3,                       // gp
+    R4,                       // tp
+    R23                       // java thread
+);
+
+// Class for non-allocatable 64 bit registers
+reg_class non_allocatable_reg(
     R0,                       // zr
     R1,                       // lr
     R2,                       // sp
@@ -719,6 +757,12 @@ source %{
 
     _NO_SPECIAL_REG32_mask = _ALL_REG32_mask;
     _NO_SPECIAL_REG32_mask.SUBTRACT(_NON_ALLOCATABLE_REG32_mask);
+
+    _NO_SPECIAL_REG_mask = _ALL_REG_mask;
+    _NO_SPECIAL_REG_mask.SUBTRACT(_NON_ALLOCATABLE_REG_mask);
+
+    _NO_SPECIAL_PTR_REG_mask = _ALL_REG_mask;
+    _NO_SPECIAL_PTR_REG_mask.SUBTRACT(_NON_ALLOCATABLE_REG_mask);
 
     // x27 is not allocatable when compressed oops is on
     if (UseCompressedOops) {
@@ -2343,7 +2387,18 @@ frame %{
       R10_num                            // Op_RegL
     };
 
-    return OptoRegPair(lo[ideal_reg]);
+    static const int hi[Op_RegL + 1] = { // enum name
+      0,                                 // Op_Node
+      0,                                 // Op_Set
+      OptoReg::Bad,                      // Op_RegN
+      OptoReg::Bad,                      // Op_RegI
+      OptoReg::Bad,                      // Op_RegP
+      OptoReg::Bad,                      // Op_RegF
+      F10_H_num,                         // Op_RegD
+      R11_num                            // Op_RegL
+    };
+
+    return OptoRegPair(hi[ideal_reg], lo[ideal_reg]);
   %}
 %}
 
