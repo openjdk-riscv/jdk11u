@@ -2349,18 +2349,7 @@ frame %{
       R10_num                            // Op_RegL
     };
 
-    static const int hi[Op_RegL + 1] = { // enum name
-      0,                                 // Op_Node
-      0,                                 // Op_Set
-      OptoReg::Bad,                      // Op_RegN
-      OptoReg::Bad,                      // Op_RegI
-      OptoReg::Bad,                      // Op_RegP
-      OptoReg::Bad,                      // Op_RegF
-      F10_H_num,                         // Op_RegD
-      R11_num                            // Op_RegL
-    };
-
-    return OptoRegPair(hi[ideal_reg], lo[ideal_reg]);
+    return OptoRegPair(lo[ideal_reg]);
   %}
 %}
 
