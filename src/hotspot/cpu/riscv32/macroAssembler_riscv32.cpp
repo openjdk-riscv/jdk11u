@@ -3038,7 +3038,7 @@ address MacroAssembler::emit_trampoline_stub(int insts_call_instruction_offset,
 
   // make sure 4 byte aligned here, so that the destination address would be
   // 8 byte aligned after 3 intructions
-  while (offset() % wordSize == 0) { nop(); }
+  align(wordSize);
 
   relocate(trampoline_stub_Relocation::spec(code()->insts()->start() +
                                             insts_call_instruction_offset));
