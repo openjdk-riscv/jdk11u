@@ -2784,6 +2784,17 @@ operand iRegI_R14()
   interface(REG_INTER);
 %}
 
+// Register R29 only
+operand iRegI_R29()
+%{
+  constraint(ALLOC_IN_RC(r29_reg));
+  match(RegI);
+  match(iRegINoSp);
+  op_cost(0);
+  format %{ %}
+  interface(REG_INTER);
+%}
+
 // Long Register Operands
 operand iRegL()
 %{
@@ -7251,7 +7262,7 @@ instruct castX2P(iRegPNoSp dst, iRegL src) %{
   ins_pipe(ialu_reg);
 %}
 
-instruct castP2X(iRegLNoSp dst, iRegP src) %{
+instruct castP2X(iRegINoSp dst, iRegP src) %{
   match(Set dst (CastP2X src));
 
   ins_cost(ALU_COST);
@@ -9588,7 +9599,7 @@ instruct string_indexof_conUL(iRegP_R11 str1, iRegI_R12 cnt1, iRegP_R13 str2,
 %}
 
 // clearing of an array
-instruct clearArray_reg_reg(iRegI_R14 cnt, iRegP_R28 base, Universe dummy, rFlagsReg cr)
+instruct clearArray_reg_reg(iRegI_R29 cnt, iRegP_R28 base, Universe dummy, rFlagsReg cr)
 %{
   match(Set dummy (ClearArray cnt base));
   effect(USE_KILL cnt, USE_KILL base, KILL cr);
