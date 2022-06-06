@@ -1152,17 +1152,17 @@ void MacroAssembler::popa() {
 void MacroAssembler::push_CPU_state() {
   push_reg(0xfffffff8, sp);         // integer registers except zr(x0) & ra(x1) & sp(x2)
   // float registers
-  addi(sp, sp, - 32 * wordSize);
+  addi(sp, sp, - 32 * 2 * wordSize);
   for (int i = 0; i <= 31; i ++) {
-    fsd(as_FloatRegister(i), Address(sp, i * wordSize));
+    fsd(as_FloatRegister(i), Address(sp, i * 2 * wordSize));
   }
 }
 
 void MacroAssembler::pop_CPU_state() {
   for (int i = 0; i <= 31; i ++) {
-    fld(as_FloatRegister(i), Address(sp, i * wordSize));
+    fld(as_FloatRegister(i), Address(sp, i * 2 * wordSize));
   }
-  addi(sp, sp, 32 * wordSize);
+  addi(sp, sp, 32 * 2 * wordSize);
   pop_reg(0xfffffff8, sp);         // integer registers except zr(x0) & ra(x1) & sp(x2)
 }
 
